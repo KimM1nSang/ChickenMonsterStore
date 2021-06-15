@@ -97,6 +97,7 @@ public class PlayerHandler : MonoBehaviour
             GameManager.Instance.bullet--;
             GameManager.Instance.BulletImage[GameManager.Instance.bullet].GetComponent<UnityEngine.UI.Image>().color = new Color(0,0,0); 
             DOTween.KillAll();
+            SoundManager.Instance.GunSound.Play();
             GameManager.Instance.CameraShaking(2f);
             GameManager.Instance.orderState = GameManager.OrderState.ORDER;
             GameManager.Instance.OrderTextReset();

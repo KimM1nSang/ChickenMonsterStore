@@ -200,6 +200,7 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             FriedCurValue += workingPower;
+            SoundManager.Instance.Fried.Play();
         }
         if (FriedCurValue >= 100)
         {
@@ -222,6 +223,7 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) && oilTemp < oilLimit)
         {
             oilTemp += workingPower;
+            SoundManager.Instance.Oil.Play();
         }
 
     }
