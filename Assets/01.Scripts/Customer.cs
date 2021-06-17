@@ -14,13 +14,17 @@ public class Customer : MonoBehaviour
     }
 
     //생성
-    public static void Create(Transform customerPrefab, Vector3 originPos, int index)
+    public static void Create(Transform customerPrefab, Vector3 originPos)
     {
         Transform createCustomer = Instantiate(customerPrefab, originPos, Quaternion.identity);//생성
 
         Customer c = createCustomer.GetComponent<Customer>();
 
-        c.index = index;//순서 설정
+        
+
+        c.index = Mathf.Clamp(GameManager.Instance.customers.Count, 0, 2);//순서 설정
+
+        Debug.Log(c.index);
 
         c.SettingCustomer();//세팅 함수 호출
 
@@ -52,6 +56,7 @@ public class Customer : MonoBehaviour
                 {
                     GameManager.Instance.MenuOrder();//주문을 받는다
                 }
+                
             });
         }
     }
@@ -100,6 +105,7 @@ public class Customer : MonoBehaviour
         seq.AppendCallback(() =>//트윈이 끝났을때
         {
             GameManager.Instance.PullCustomer();//게임 매니저의 PullCustomer 함수 호출
+            //Debug.Log("zzz");
             Destroy(gameObject);//현 오브젝트 삭제
         });
 

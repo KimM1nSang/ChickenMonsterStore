@@ -105,14 +105,8 @@ public class GameManager : MonoBehaviour
     {
         if (customers!= null && customers.Count >=2 && customers.Last().index == 2)
             return;
-        Customer.Create(customerPrefab, customerFirstPosition.position,index);//Customer 클래스의 생성함수 호출
-        //Debug.Log(customers.Keys.Count);
-        //손님 순서 정리
-        index++;
-        if(index >2)
-        {
-            index--;
-        }
+        Customer.Create(customerPrefab, customerFirstPosition.position);//Customer 클래스의 생성함수 호출
+
     }
     public void OrderTextReset()//주문 텍스트 리셋(지우기)
     {
@@ -249,11 +243,18 @@ public class GameManager : MonoBehaviour
     {
         foreach (var item in customers)
         {
-            item.index--;//인덱스 감소
-            item.MovePosition();//이동
+            if(item.index !=0)
+            {
+                item.index--;//인덱스 감소
+                item.MovePosition();//이동
+            }
         }
+        /*if(customers.Peek().index == 1)
+        {
+            customers.Last().index--;
+            customers.Last().MovePosition();
+        }*/
         customers.Dequeue();//손님 제거
-
     }
     public void ResetWorkHistory()//일의 진척도 리셋
     {
@@ -321,7 +322,7 @@ public class GameManager : MonoBehaviour
         orderState = OrderState.ORDER;
         foreach (var item in BulletImage)
         {
-            item.gameObject.SetActive(true);
+            item.gameObject.GetComponent<Image>().color = new Color(1, 1, 1);
         }
         Time.timeScale = 1;
         gameOverPanel.gameObject.SetActive(false);

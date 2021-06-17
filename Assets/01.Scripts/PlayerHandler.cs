@@ -27,6 +27,18 @@ public class PlayerHandler : MonoBehaviour
     //
     //   생닭
     //    A,B,C,D,E,F급 생닭
+    //
+    //    확률
+    //    F = 50;
+    //    E = 25;
+    //    D = 12.5f;
+    //    C = 6.25;
+    //    B = 3.125;
+    //    A = 1.5625;
+    //  
+    //    상점
+    //    0.1/0.5/0.85
+    //
     //   튀김옷
     //    A,B,C,D,E,F급 튀김옷
     //   
@@ -34,6 +46,7 @@ public class PlayerHandler : MonoBehaviour
     //   한번만 사도 됨
     //    A,B,C,D,E,F급 기름
     //    기름의 등급에 따라 치킨의 완성도를 높이기 쉬워짐
+
     //  직원 고용
     //   A,B,C,D,E,F급 직원
     //   청소 담당
@@ -130,10 +143,11 @@ public class PlayerHandler : MonoBehaviour
             GameManager.Instance.EndDispose();//손님을 퇴장 시킨다.
 
             //예외 처리
-            if(GameManager.Instance.index >=2)
+            /*if(GameManager.Instance.index >=2)
             {
-                GameManager.Instance.index -= GameManager.Instance.customers.Count-3;
-            }
+                GameManager.Instance.index -= GameManager.Instance.customers.Count-2;
+            }*/
+            
 
             //발사 성공 애니메이션 필요
         }
