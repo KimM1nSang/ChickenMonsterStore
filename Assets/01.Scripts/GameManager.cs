@@ -5,16 +5,37 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using System.Linq;
+using System.IO;
+using System.Dynamic;
 
 public class GameManager : MonoBehaviour
 {
+    public SaveData _data;
+    public SaveData data
+    {
+        get
+        {
+            if(_data == null)
+            {
+                LoadGameData();
+                SaveGameData();
+            }
+            return _data;
+        }
+    }
     public static GameManager Instance { get; private set; }
+
+    private string gameDataFileName = "ChickenMonster";
+    private const string gameDataSaveType = ".json";
 
     [Header("카메라")]
     public CinemachineVirtualCamera vCamera;
     public CinemachineImpulseSource ImpulseSource;
 
-
+    [Header("시간")]
+    private float time;
+    private bool isDayTime = true;
+    public bool IsDayTime { get { return isDayTime; } private set { isDayTime = value; } }
     [Header("주문")]
     public OrderState orderState = OrderState.ORDER;
     public enum OrderState//주문을 받기위한 상태
@@ -24,7 +45,7 @@ public class GameManager : MonoBehaviour
         ORDERED//주문을 받은 상태, 치킨을 제공할 수 있는 상태
     }
     [SerializeField] private Text orderText = null;//주문을 알려주는 UI
-
+    private int orderAmount = 0;
     [Header("손님")]
     public Queue<Customer> customers = new Queue<Customer>();//손님을 저장하는 큐
     public int index = 0;//손님의 순서
@@ -40,7 +61,6 @@ public class GameManager : MonoBehaviour
     [Header("치킨")]
     private float FriedCurValue = 0;//얼마나 튀겨졌는가
     [SerializeField] private Slider FriedprogressBar = null;//얼마나 튀겼는가를 알려줄 UI
-    private Chicken orderedChicken = new Chicken();//치킨
     public List<Chicken> madeChickens = new List<Chicken>();//튀긴 치킨을 저장할 리스트
 
     [Header("기름온도")]
@@ -63,7 +83,8 @@ public class GameManager : MonoBehaviour
     public Image[] BulletImage = null;//총알의 갯수를 알려줄 UI
     [Header("게임오버")]
     public Image gameOverPanel = null;//게임오버 판넬
-
+    [Header("상점")]
+    public Transform shopPanel = null;
     private void Awake()
     {
         Instance = this;
@@ -77,33 +98,48 @@ public class GameManager : MonoBehaviour
         //Debug.Log(customers.Count);
         //Debug.Log(canCreate);
 
-        if (orderState == OrderState.ORDERED)//인내심 감소
-            ProgressBarDown(ref waitingTime, waitingTimeLimit, downWaitingTime, ref WaitingTimeprogressBar);
-        if (waitingTime <= 0)
+        if(isDayTime)
         {
-            //손님이 화남
-            //Debug.Log("ANGRY");
-            GameOver();
-        }
-
-        //기름 온도 감소
-        ProgressBarDown(ref oilTemp, oilLimit, downOilTemp, ref OilprogressBar);
-
-        //손님 생성
-        SpawningCustomer();
-
-        //게임 재시작
-        if (Time.timeScale == 0)
-        {
-            if(Input.anyKeyDown)
+            if (orderState == OrderState.ORDERED)//인내심 감소
+                ProgressBarDown(ref waitingTime, waitingTimeLimit, downWaitingTime, ref WaitingTimeprogressBar);
+            if (waitingTime <= 0)
             {
-                GameStart();
+                //손님이 화남
+                //Debug.Log("ANGRY");
+            }
+
+            //기름 온도 감소
+            ProgressBarDown(ref oilTemp, oilLimit, downOilTemp, ref OilprogressBar);
+
+            //손님 생성
+            SpawningCustomer();
+
+            Debug.Log(time);
+            if (time <= 0)
+            {
+                time = 0;
+                isDayTime = false;
+                DOTween.KillAll();
+                ResetWorkHistory();
+                OrderTextReset();
+                foreach (var item in customers)
+                {
+                    Destroy(item.gameObject);
+                }
+                customers.Clear();
+                orderState = OrderState.ORDER;
+                shopPanel.gameObject.SetActive(true);
+            }
+            else
+            {
+                time -= Time.deltaTime;
             }
         }
+       
     }
     public void CreateCustomer()//손님 생성 함수
     {
-        if (customers!= null && customers.Count >=2 && customers.Last().index == 2)
+        if (customers != null && customers.Count >= 2 && customers.Last().index == 2) 
             return;
         Customer.Create(customerPrefab, customerFirstPosition.position);//Customer 클래스의 생성함수 호출
 
@@ -129,7 +165,7 @@ public class GameManager : MonoBehaviour
         if (orderState != OrderState.ORDER) return;//스테이트가 ORDER 가 아니면 리턴
         orderState = OrderState.BETWEENORDER;
 
-        orderedChicken.RandomAmount();//치킨의 양 정하기
+        orderAmount = RandomAmount(3);//주문 갯수 랜덤
         waitingTime = customers.Peek().WaitingTime;//손님에 따른 인내심 세팅
         downWaitingTime = customers.Peek().DownWaitingTime;//손님에 따른 인내심 감소치 세팅
         OrderTextReset();//텍스트 리셋
@@ -138,8 +174,10 @@ public class GameManager : MonoBehaviour
         switch (customers.Peek().customerType)
         {
             case Customer.CustomerType.NORMAL:
+                chickenOrderTxt = $"치킨 {orderAmount}마리 주세요";
+                break;
             case Customer.CustomerType.LATTE:
-                chickenOrderTxt = $"치킨 {orderedChicken.Amount}마리 주세요";
+                chickenOrderTxt = $"그 치킨 {orderAmount}개만 좀 줘봐";
                 break;
             case Customer.CustomerType.ROBBER:
                 chickenOrderTxt = "저는 치킨 강도에요 당신의 치킨을 가지러 왔어요.";
@@ -187,6 +225,17 @@ public class GameManager : MonoBehaviour
         });
 
     }
+    public int RandomAmount(int maxAmount)
+    {
+        if (Random.Range(0, 99) == 0)
+        {
+            return Random.Range(10, 15);
+        }
+        else
+        {
+            return  Random.Range(1, maxAmount);
+        }
+    }
     public void DisposeChicken()
     {
         if (orderState != OrderState.ORDERED) return;//스테이트가 ORDERED 가 아니면 리턴
@@ -194,7 +243,7 @@ public class GameManager : MonoBehaviour
 
         DOTween.KillAll();
         OrderTextReset();
-        if (madeChickens.Count == orderedChicken.Amount && Instance.orderedChicken.IsGood == true)
+        if (madeChickens.Count == orderAmount && IsGoodChickenInHere())
         {
             orderText.DOText("잘 놀다 갑니다.", 2f).OnComplete(() => {
                 EndDispose();
@@ -206,7 +255,7 @@ public class GameManager : MonoBehaviour
                 EndDispose();
             });
         }
-        else if (madeChickens.Count != orderedChicken.Amount)
+        else if (madeChickens.Count != orderAmount)
         {
             orderText.DOText("갯수가 틀렸잖아!!!!!!!!!!!!!!", 2f).OnComplete(() => {
                 EndDispose();
@@ -231,9 +280,20 @@ public class GameManager : MonoBehaviour
         }
         waitingTime = waitingTimeLimit;
         madeChickens.Clear();
-        orderedChicken.Amount = 0;
+        orderAmount = 0;
     }
-
+    public bool IsGoodChickenInHere()
+    {
+        int index =0;
+        foreach (var item in madeChickens)
+        {
+            if(!item.IsGood)
+            {
+                index++;
+            }
+        }
+        return index == 0;
+    }
     public void EndDispose()//손님 퇴장 및 상태 원상 복구(주문을 받을 수 있는 원래의 상태로 복구)
     {
         customers.Peek().ExitTheStore();//퇴장
@@ -266,18 +326,26 @@ public class GameManager : MonoBehaviour
         float workingPower = 25;//얼마나 증가하는지
 
         //FriedCurValue += Time.deltaTime;
-        if (Input.GetKeyDown(KeyCode.Space))
+        if(data.chickens.Count >0)
         {
-            FriedCurValue += workingPower;//튀김 상태 증가
-            SoundManager.Instance.Fried.Play();//음원 재생
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                FriedCurValue += workingPower;//튀김 상태 증가
+                SoundManager.Instance.Fried.Play();//음원 재생
+            }
+            if (FriedCurValue >= 100)//다 튀겼으면 리셋
+            {
+                data.chickens.Peek().IsGood = IsRightOilTemp();//치킨의 상태 체크
+                madeChickens.Add(data.chickens.Dequeue());//만든 치킨에 추가
+                FriedCurValue = 0;//얼마나 튀겼는지를 리셋
+            }
+            FriedprogressBar.value = FriedCurValue / 100;//얼마나 튀겼는지를 표기
         }
-        if (FriedCurValue >= 100)//다 튀겼으면 리셋
+        else
         {
-            orderedChicken.IsGood = IsRightOilTemp();//치킨의 상태 체크
-            madeChickens.Add(orderedChicken);//만든 치킨에 추가
-            FriedCurValue = 0;//얼마나 튀겼는지를 리셋
+            //실패 음원 재생
+            Debug.Log("생닭 부족");
         }
-        FriedprogressBar.value = FriedCurValue / 100;//얼마나 튀겼는지를 표기
     }
 
     private bool IsRightOilTemp()//치킨의 완성도를 측정
@@ -298,23 +366,14 @@ public class GameManager : MonoBehaviour
     }
     private void SpawningCustomer()//손님을 생성하는 함수
     {
-        if (orderState == OrderState.ORDERED) return;
+        if (orderState == OrderState.ORDERED || isDayTime == false) return;
 
         int rand = Random.Range(0, 200);
         if (rand == 5) CreateCustomer();
     }
-    public void GameOver()//게임의 상태를 정리해주는 함수
-    {
-        foreach (var item in customers)
-        {
-            Destroy(item.gameObject);
-        }
-        customers.Clear();
-        Time.timeScale = 0;
-        gameOverPanel.gameObject.SetActive(true);
-    }
     public void GameStart()//값을 리셋 해주는 함수
     {
+        time = 10;
         waitingTime = waitingTimeLimit;
         OrderTextReset();
         bullet = bulletLimit;
@@ -324,7 +383,30 @@ public class GameManager : MonoBehaviour
         {
             item.gameObject.GetComponent<Image>().color = new Color(1, 1, 1);
         }
-        Time.timeScale = 1;
         gameOverPanel.gameObject.SetActive(false);
+    }
+    public void LoadGameData()
+    {
+        string filePath = Application.persistentDataPath + gameDataFileName + gameDataSaveType;
+
+        if(File.Exists(filePath))
+        {
+            Debug.Log("불러오기 성공!");
+            string FromJsonData = File.ReadAllText(filePath);
+            _data = JsonUtility.FromJson<SaveData>(FromJsonData);
+        }
+        else
+        {
+            Debug.Log("파일이 없는 관계로 새로운 파일 생성");
+
+            _data = new SaveData();
+        }
+    }
+    public void SaveGameData()
+    {
+        string ToJsonData = JsonUtility.ToJson(data);
+        string filePath = Application.persistentDataPath + gameDataFileName + gameDataSaveType;
+        File.WriteAllText(filePath, ToJsonData);
+        Debug.Log("저장 완료");
     }
 }

@@ -91,7 +91,7 @@ public class PlayerHandler : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (Time.timeScale == 0) return;//게임의 상태 (게임오버,등등) 체크
+        if (GameManager.Instance.IsDayTime == false) return;
         CheckplayerDir();//입력 체크
         MoveAsplayerDir();//입력에 따른 위치 이동
         Working();//입력에 따른 행동
