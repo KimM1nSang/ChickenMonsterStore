@@ -7,7 +7,7 @@ public class SoundManager : MonoBehaviour
     public static SoundManager Instance { get; private set; }
 
     public AudioSource Fried;
-    public AudioSource GunSound;
+    public AudioSource GunSound;    
     public AudioSource Oil;
     private void Awake()
     {

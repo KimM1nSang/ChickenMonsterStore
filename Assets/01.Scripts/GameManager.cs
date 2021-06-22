@@ -33,9 +33,7 @@ public class GameManager : MonoBehaviour
     public CinemachineImpulseSource ImpulseSource;
 
     [Header("시간")]
-    private float time;
-    private bool isDayTime = true;
-    public bool IsDayTime { get { return isDayTime; } private set { isDayTime = value; } }
+    public TimeManager timeManager = null;
     [Header("주문")]
     public OrderState orderState = OrderState.ORDER;
     public enum OrderState//주문을 받기위한 상태
@@ -98,7 +96,30 @@ public class GameManager : MonoBehaviour
         //Debug.Log(customers.Count);
         //Debug.Log(canCreate);
 
-        if(isDayTime)
+            Debug.Log(timeManager.time);
+        if (timeManager.time <= 0)
+        {
+            if (timeManager.IsDayTime)
+            {
+                timeManager.SetDayTime(false);
+                DOTween.KillAll();
+                foreach (var item in customers)
+                {
+                    //Destroy(item.gameObject);
+                    item.ExitTheStore();
+                }
+                customers.Clear();
+            }
+            else
+            {
+                timeManager.SetDayTime(true);
+            }
+            timeManager.ResetTime();
+            ResetWorkHistory();
+            OrderTextReset();
+            orderState = OrderState.ORDER;
+        }
+        if (timeManager.IsDayTime)
         {
             if (orderState == OrderState.ORDERED)//인내심 감소
                 ProgressBarDown(ref waitingTime, waitingTimeLimit, downWaitingTime, ref WaitingTimeprogressBar);
@@ -113,29 +134,20 @@ public class GameManager : MonoBehaviour
 
             //손님 생성
             SpawningCustomer();
-
-            Debug.Log(time);
-            if (time <= 0)
+          
+        }
+        else
+        {
+            if (Input.GetKeyDown(KeyCode.DownArrow))
             {
-                time = 0;
-                isDayTime = false;
-                DOTween.KillAll();
-                ResetWorkHistory();
-                OrderTextReset();
-                foreach (var item in customers)
-                {
-                    Destroy(item.gameObject);
-                }
-                customers.Clear();
-                orderState = OrderState.ORDER;
                 shopPanel.gameObject.SetActive(true);
             }
-            else
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
-                time -= Time.deltaTime;
+                shopPanel.gameObject.SetActive(false);
             }
         }
-       
+        timeManager.SubtractTime(Time.deltaTime);
     }
     public void CreateCustomer()//손님 생성 함수
     {
@@ -144,6 +156,7 @@ public class GameManager : MonoBehaviour
         Customer.Create(customerPrefab, customerFirstPosition.position);//Customer 클래스의 생성함수 호출
 
     }
+
     public void OrderTextReset()//주문 텍스트 리셋(지우기)
     {
         orderText.text = " ";
@@ -366,14 +379,13 @@ public class GameManager : MonoBehaviour
     }
     private void SpawningCustomer()//손님을 생성하는 함수
     {
-        if (orderState == OrderState.ORDERED || isDayTime == false) return;
+        if (orderState == OrderState.ORDERED || timeManager.IsDayTime == false) return;
 
         int rand = Random.Range(0, 200);
         if (rand == 5) CreateCustomer();
     }
     public void GameStart()//값을 리셋 해주는 함수
     {
-        time = 10;
         waitingTime = waitingTimeLimit;
         OrderTextReset();
         bullet = bulletLimit;
