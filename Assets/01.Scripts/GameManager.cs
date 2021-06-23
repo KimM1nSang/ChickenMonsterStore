@@ -49,7 +49,7 @@ public class GameManager : MonoBehaviour
     public int index = 0;//손님의 순서
     [SerializeField] private Transform customerPrefab;//손님 프리팹
     [SerializeField] private Transform customerFirstPosition;//손님의 생성 위치
-
+    public Sprite[] cutomerSprites;
     [Header("인내심")]
     [SerializeField] private Slider WaitingTimeprogressBar = null;//손님의 인내심을 알려줄 UI
     public float waitingTime = 0;//인내심
@@ -67,12 +67,13 @@ public class GameManager : MonoBehaviour
     private const float oilLimit = 1000;//기름온도 제한
 
     //치킨의 완성을 위한 기름온도의 최대,최소값
-    private const float minOilTemp = 500;
-    private const float maxOilTemp = 700;
+    private float minOilTemp = 500;
+    private float maxOilTemp = 700;
 
     //초당 얼마나 온도가 떨어지는가
     private float downOilTemp = 100;
 
+    public Text friedPowder = null;
 
 
     [Header("총알")]
@@ -83,10 +84,12 @@ public class GameManager : MonoBehaviour
     public Image gameOverPanel = null;//게임오버 판넬
     [Header("상점")]
     public Transform shopPanel = null;
+    public Text moneyText = null;
     private void Awake()
     {
         Instance = this;
-        GameStart();//시작하자마자 함수 실행
+        GameSet();
+        GameReset();//시작하자마자 함수 실행
         //CreateCustomer();
     }
 
@@ -96,7 +99,7 @@ public class GameManager : MonoBehaviour
         //Debug.Log(customers.Count);
         //Debug.Log(canCreate);
 
-            Debug.Log(timeManager.time);
+            //Debug.Log(timeManager.time);
         if (timeManager.time <= 0)
         {
             if (timeManager.IsDayTime)
@@ -108,16 +111,15 @@ public class GameManager : MonoBehaviour
                     //Destroy(item.gameObject);
                     item.ExitTheStore();
                 }
-                customers.Clear();
             }
             else
             {
+                shopPanel.gameObject.SetActive(false);
                 timeManager.SetDayTime(true);
             }
             timeManager.ResetTime();
             ResetWorkHistory();
-            OrderTextReset();
-            orderState = OrderState.ORDER;
+            GameReset();
         }
         if (timeManager.IsDayTime)
         {
@@ -138,13 +140,9 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            if (Input.GetKeyDown(KeyCode.DownArrow))
+            if (Input.GetKeyDown(KeyCode.LeftAlt))
             {
-                shopPanel.gameObject.SetActive(true);
-            }
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                shopPanel.gameObject.SetActive(false);
+                shopPanel.gameObject.SetActive(!shopPanel.gameObject.activeSelf);
             }
         }
         timeManager.SubtractTime(Time.deltaTime);
@@ -159,7 +157,7 @@ public class GameManager : MonoBehaviour
 
     public void OrderTextReset()//주문 텍스트 리셋(지우기)
     {
-        orderText.text = " ";
+        orderText.text = "";
     }
     public void CameraShaking(float force)//주어진 값으로 카메라 흔드는 함수
     {
@@ -259,8 +257,14 @@ public class GameManager : MonoBehaviour
         if (madeChickens.Count == orderAmount && IsGoodChickenInHere())
         {
             orderText.DOText("잘 놀다 갑니다.", 2f).OnComplete(() => {
+                
                 EndDispose();
+
             });
+            for (int i = 0; i < orderAmount; i++)
+            {
+                data.money += ((madeChickens[i].rank + 1) * madeChickens[i].price * data.oil.rank +1);
+            }
         }
         else if (madeChickens.Count <= 0)
         {
@@ -272,7 +276,12 @@ public class GameManager : MonoBehaviour
         {
             orderText.DOText("갯수가 틀렸잖아!!!!!!!!!!!!!!", 2f).OnComplete(() => {
                 EndDispose();
+               
             });
+            for (int i = 0; i < orderAmount; i++)
+            {
+                data.money += ((madeChickens[i].rank + 1) * madeChickens[i].price * data.oil.rank + 1) /4;
+            }
         }
         else
         {
@@ -288,7 +297,12 @@ public class GameManager : MonoBehaviour
             {
                 orderText.DOText("튀김상태가 이게 뭐야!!!!!!!!!!!!.", 2f).OnComplete(() => {
                     EndDispose();
+                    
                 });
+                for (int i = 0; i < orderAmount; i++)
+                {
+                    data.money += ((madeChickens[i].rank + 1) * madeChickens[i].price * data.oil.rank + 1) /2;
+                }
             }
         }
         waitingTime = waitingTimeLimit;
@@ -310,6 +324,7 @@ public class GameManager : MonoBehaviour
     public void EndDispose()//손님 퇴장 및 상태 원상 복구(주문을 받을 수 있는 원래의 상태로 복구)
     {
         customers.Peek().ExitTheStore();//퇴장
+        RefreshText();
         orderState = OrderState.ORDER;//상태 복구
     }
     public void PullCustomer()//전체 위치 이동
@@ -368,14 +383,25 @@ public class GameManager : MonoBehaviour
 
     public void OilTempUp()//기름의 온도가 올라가게해주는 함수
     {
-        float workingPower = 50;
+        float workingPower = 20;
 
-        if (Input.GetKeyDown(KeyCode.Space) && oilTemp < oilLimit)
+        if (Input.GetKeyDown(KeyCode.Space) && data.friedPowders.Count >=1)
         {
-            oilTemp += workingPower;
-            SoundManager.Instance.Oil.Play();
+            if (oilTemp < oilLimit)
+            {
+                oilTemp += workingPower * (data.friedPowders.Peek().rank +1);
+                SoundManager.Instance.Oil.Play();
+            }
+            RefreshText();
+            data.friedPowders.Dequeue();
         }
 
+    }
+    public void RefreshText()
+    {
+        friedPowder.text = $"X {data.friedPowders.Count}";
+        moneyText.text = string.Format("{0:#,###}", data.money.ToString());
+        maxOilTemp = 700 + 40 * data.oil.rank;
     }
     private void SpawningCustomer()//손님을 생성하는 함수
     {
@@ -384,8 +410,9 @@ public class GameManager : MonoBehaviour
         int rand = Random.Range(0, 200);
         if (rand == 5) CreateCustomer();
     }
-    public void GameStart()//값을 리셋 해주는 함수
+    public void GameReset()//값을 리셋 해주는 함수
     {
+        RefreshText();
         waitingTime = waitingTimeLimit;
         OrderTextReset();
         bullet = bulletLimit;
@@ -396,6 +423,13 @@ public class GameManager : MonoBehaviour
             item.gameObject.GetComponent<Image>().color = new Color(1, 1, 1);
         }
         gameOverPanel.gameObject.SetActive(false);
+    }
+    public void GameSet()
+    {
+        if(data.money == 0)
+        {
+            data.money = 100;
+        }
     }
     public void LoadGameData()
     {

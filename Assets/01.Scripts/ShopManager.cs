@@ -46,23 +46,25 @@ public class ShopManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
+            shopItems[state].GetComponent<ShopItem>().rank++;
+            if (shopItems[state].GetComponent<ShopItem>().rank > rankLimit)
+            {
+                shopItems[state].GetComponent<ShopItem>().rank = 0;
+            }
+           
+        }
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
             shopItems[state].GetComponent<ShopItem>().rank--;
             if (shopItems[state].GetComponent<ShopItem>().rank < 0)
             {
                 shopItems[state].GetComponent<ShopItem>().rank = rankLimit;
             }
         }
-        if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            shopItems[state].GetComponent<ShopItem>().rank++;
-            if (shopItems[state].GetComponent<ShopItem>().rank > rankLimit)
-            {
-                shopItems[state].GetComponent<ShopItem>().rank = 0;
-            }
-        }
         if (Input.GetKeyDown(KeyCode.Space))
         {
             item.Perchase();
+            GameManager.Instance.RefreshText();
         }
         item.shopRank = shopItems[state].GetComponent<ShopItem>().rank;
         item.shopItem = (Item.ShopItem)state;

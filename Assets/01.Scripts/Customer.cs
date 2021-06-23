@@ -24,24 +24,25 @@ public class Customer : MonoBehaviour
 
         c.index = Mathf.Clamp(GameManager.Instance.customers.Count, 0, 2);//순서 설정
 
-        Debug.Log(c.index);
+        //Debug.Log(c.index);
 
         c.SettingCustomer();//세팅 함수 호출
-
+        int rand = UnityEngine.Random.Range(0, GameManager.Instance.cutomerSprites.Length);
+        c.gameObject.GetComponent<SpriteRenderer>().sprite = GameManager.Instance.cutomerSprites[rand];
         //index++;
         c.MovePosition();//순서에 맞는 위치 이동
         GameManager.Instance.customers.Enqueue(c);//생성한 손님을 큐에 삽입
     }
     public enum CustomerType //손님의 타입
     {
-        NORMAL,
-        LATTE,
-        ROBBER
+        NORMAL = 0,
+        LATTE = 1,
+        ROBBER = 2
     }
     public CustomerType customerType = CustomerType.NORMAL;
 
     //이동 위치 미리 정해두기(하드코딩)
-    private Vector3[] positions = new Vector3[4] { new Vector3(0, 1f, 1.5f), new Vector3(0, 2.5f, 1.5f), new Vector3(0, 4f, 1.5f), new Vector3(0, 5.5f, 1.5f) };
+    private Vector3[] positions = new Vector3[4] { new Vector3(0, 1f, 1.5f), new Vector3(0, 2.5f,1.6f), new Vector3(0, 4f, 1.7f), new Vector3(0, 5.5f, 1.8f) };
 
 
     public void MovePosition()
@@ -80,7 +81,7 @@ public class Customer : MonoBehaviour
             WaitingTimeSetting(UnityEngine.Random.Range(800, 1000), UnityEngine.Random.Range(200, 250));
         }
 
-        Debug.Log(customerType);
+        //Debug.Log(customerType);
     }
 
     private void WaitingTimeSetting(int watingTime,int downWaitingTime)

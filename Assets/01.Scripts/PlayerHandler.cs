@@ -66,6 +66,8 @@ public class PlayerHandler : MonoBehaviour
 
     [Header("플레이어 위치들")]
     [SerializeField] private Transform[] playerPositions;//플레이어의 위치값들
+    [Header("플레이어 스프라이트들")]
+    [SerializeField] private Sprite[] playerSprites;
 
     private enum PlayerState//총기 상태
     {
@@ -185,5 +187,10 @@ public class PlayerHandler : MonoBehaviour
         bool isUp = v != 0 && v == 1;
         bool isIdle = h == 0 && v == 0;
         playerDir = isIdle ? PlayerDir.IDLE : isHorizontal ? (isLeft ? PlayerDir.LEFT : PlayerDir.RiGHT) : (isUp ? PlayerDir.UP : PlayerDir.IDLE) ;
+        player.GetComponent<SpriteRenderer>().sprite = playerSprites[(int)playerDir];
+        if (h != 0)
+        {
+            player.localScale = new Vector3(8 * h, player.localScale.y, player.localScale.z);
+        }
     }
 }

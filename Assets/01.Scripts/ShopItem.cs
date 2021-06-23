@@ -13,27 +13,27 @@ public class ShopItem : MonoBehaviour
 
         switch (rank)
         {
-            case 0:
+            case 5:
                 strRank = "A";
                 break;
 
-            case 1:
+            case 4:
                 strRank = "B";
                 break;
 
-            case 2:
+            case 3:
                 strRank = "C";
                 break;
 
-            case 3:
+            case 2:
                 strRank = "D";
                 break;
 
-            case 4:
+            case 1:
                 strRank = "E";
                 break;
 
-            case 5:
+            case 0:
                 strRank = "F";
                 break;
         }

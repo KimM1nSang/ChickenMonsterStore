@@ -5,7 +5,7 @@ using UnityEngine;
 public class TimeManager : MonoBehaviour
 {
     public float time { get; private set; }
-    private const float dayTime = 10;
+    private const float dayTime = 20;
     private bool isDayTime = true;
     public bool IsDayTime { get { return isDayTime; } private set { isDayTime = value; } }
     
