@@ -62,6 +62,9 @@ public class PlayerHandler : MonoBehaviour
     // 위쪽 = 손님 접대
     // 가운데 = 총
 
+    // 한 사이클
+    // 피드백
+
     private Transform player;
 
     [Header("플레이어 위치들")]
@@ -126,13 +129,13 @@ public class PlayerHandler : MonoBehaviour
     }
     private void Gun()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && playerState == PlayerState.IDLE && GameManager.Instance.orderState == GameManager.OrderState.BETWEENORDER) 
+        if (Input.GetKeyDown(KeyCode.Space) && playerState == PlayerState.IDLE && GameManager.Instance.customers.Count>=1/* && GameManager.Instance.orderState == GameManager.OrderState.BETWEENORDER*/) 
         {
             //총을 들기
             playerState = PlayerState.GUN;
             Debug.Log(playerState);
         }
-        else if (Input.GetKeyDown(KeyCode.Space) && GameManager.Instance.bullet > 0 && playerState == PlayerState.GUN && GameManager.Instance.orderState != GameManager.OrderState.ORDER)
+        else if (Input.GetKeyDown(KeyCode.Space) && GameManager.Instance.bullet > 0 && playerState == PlayerState.GUN && GameManager.Instance.customers.Count >= 1/*&& GameManager.Instance.orderState != GameManager.OrderState.ORDER*/)
         {
             //발사
             playerState = PlayerState.IDLE;

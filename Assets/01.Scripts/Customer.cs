@@ -8,6 +8,8 @@ public class Customer : MonoBehaviour
 {
     public int index = 0; //손님의 순서
     public AudioSource CustomerCome;
+
+    public bool isAngry;
     private void Awake()
     {
         CustomerCome = gameObject.GetComponent<AudioSource>();
@@ -27,8 +29,8 @@ public class Customer : MonoBehaviour
         //Debug.Log(c.index);
 
         c.SettingCustomer();//세팅 함수 호출
-        int rand = UnityEngine.Random.Range(0, GameManager.Instance.cutomerSprites.Length);
-        c.gameObject.GetComponent<SpriteRenderer>().sprite = GameManager.Instance.cutomerSprites[rand];
+        int rand = UnityEngine.Random.Range(0, GameManager.Instance.customerSprites.Length);
+        c.gameObject.GetComponent<SpriteRenderer>().sprite = GameManager.Instance.customerSprites[rand];
         //index++;
         c.MovePosition();//순서에 맞는 위치 이동
         GameManager.Instance.customers.Enqueue(c);//생성한 손님을 큐에 삽입

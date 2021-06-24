@@ -13,7 +13,34 @@ public class Item
     public ShopItem shopItem = ShopItem.chicken;
 
 	public int shopRank = 0;
+	public int currentPrice = 0;
 
+	public void Setting()
+	{
+		switch (shopItem)
+		{
+			case ShopItem.chicken:
+				Chicken chicken = new Chicken();
+				int rank1 = chicken.rank;
+				chicken.rank = shopRank;
+				currentPrice = chicken.price * (chicken.rank + 1);
+				chicken.rank = rank1;
+				break;
+			case ShopItem.friedPowder:
+				FriedPowder friedPowder = new FriedPowder();
+				int rank2 = friedPowder.rank;
+				friedPowder.rank = shopRank;
+				currentPrice = friedPowder.price * (friedPowder.rank + 1);
+				friedPowder.rank = rank2;
+				break;
+			case ShopItem.oil:
+				int rank3 = GameManager.Instance.data.oil.rank;
+				GameManager.Instance.data.oil.rank = shopRank;
+				currentPrice = GameManager.Instance.data.oil.price * (GameManager.Instance.data.oil.rank + 1);
+				GameManager.Instance.data.oil.rank = rank3;
+				break;
+		}
+	}
 	public void Perchase()
 	{
 		switch (shopItem)
@@ -22,9 +49,11 @@ public class Item
 				Chicken chicken = new Chicken();
 				int rank1 = chicken.rank;
 				chicken.rank = shopRank;
-				if(GameManager.Instance.data.money >= chicken.price * (chicken.rank + 1))
+				currentPrice = chicken.price * (chicken.rank + 1);
+				chicken.currentPrice = currentPrice;
+				if (GameManager.Instance.data.money >= currentPrice)
 				{
-					DecreaseMoney(chicken.price * (chicken.rank + 1));
+					DecreaseMoney(currentPrice);
 					GameManager.Instance.data.chickens.Enqueue(chicken);
 				}
 				else
@@ -36,10 +65,15 @@ public class Item
 				FriedPowder friedPowder = new FriedPowder();
 				int rank2 = friedPowder.rank;
 				friedPowder.rank = shopRank;
-				if (GameManager.Instance.data.money >= friedPowder.price * (friedPowder.rank + 1))
+				currentPrice = friedPowder.price * (friedPowder.rank + 1);
+				friedPowder.currentPrice = currentPrice;
+				if (GameManager.Instance.data.money >=currentPrice)
 				{
-					DecreaseMoney(friedPowder.price * (friedPowder.rank + 1));
-					GameManager.Instance.data.friedPowders.Enqueue(friedPowder);
+					DecreaseMoney(currentPrice);
+					for (int i = 0; i < 5; i++)
+					{
+						GameManager.Instance.data.friedPowders.Enqueue(friedPowder);
+					}
 				}
 				else
 				{
@@ -48,10 +82,11 @@ public class Item
 				break;
 			case ShopItem.oil:
 				int rank3 = GameManager.Instance.data.oil.rank;
-				GameManager.Instance.data.oil.rank = shopRank;
-				if (GameManager.Instance.data.money >= GameManager.Instance.data.oil.price * (GameManager.Instance.data.oil.rank + 1))
+				currentPrice = GameManager.Instance.data.oil.price * (GameManager.Instance.data.oil.rank + 1);
+				if (GameManager.Instance.data.money >= currentPrice&& GameManager.Instance.data.oil.rank != shopRank)
 				{
-					DecreaseMoney(GameManager.Instance.data.oil.price * (GameManager.Instance.data.oil.rank + 1));
+					GameManager.Instance.data.oil.rank = shopRank;
+					DecreaseMoney(currentPrice);
 				}
 				else
 				{
@@ -59,6 +94,7 @@ public class Item
 				}
 				break;
 		}
+		//Debug.Log(currentPrice);
 	}
 	private void DecreaseMoney(int decrease)
 	{

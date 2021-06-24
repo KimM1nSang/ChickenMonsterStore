@@ -8,7 +8,9 @@ public class SaveData
     public Queue<FriedPowder> friedPowders { get; set; }
     public Oil oil { get; set; }
     public int money { get; set; }
-    
+
+    public int reputation { get; set; }
+
     public SaveData()
     {
         chickens = new Queue<Chicken>();

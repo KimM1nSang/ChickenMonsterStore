@@ -23,6 +23,7 @@ public class ShopManager : MonoBehaviour
     void Start()
     {
         item = new Item();
+        item.Setting();
     }
 
     void Update()
@@ -32,13 +33,13 @@ public class ShopManager : MonoBehaviour
     private void ShopChoose()
     {
         if (GameManager.Instance.timeManager.IsDayTime || !GameManager.Instance.shopPanel.gameObject.activeSelf) return;
-        if(Input.GetKeyDown(KeyCode.RightArrow)&& state < 2 && IsCanMove)
+        if(Input.GetKeyDown(KeyCode.RightArrow)&& state < 2 && IsCanMove && GameManager.Instance.isPanelOn)
         {
             IsCanMove = false;
             state++;
             shopContents.DOMoveX(shopContents.position.x - 6, .1f).OnComplete(() => { IsCanMove = true; });
         }
-        if (Input.GetKeyDown(KeyCode.LeftArrow) && state > 0 && IsCanMove)
+        if (Input.GetKeyDown(KeyCode.LeftArrow) && state > 0 && IsCanMove && GameManager.Instance.isPanelOn)
         {
             IsCanMove = false;
             state--;
@@ -51,7 +52,6 @@ public class ShopManager : MonoBehaviour
             {
                 shopItems[state].GetComponent<ShopItem>().rank = 0;
             }
-           
         }
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
@@ -63,10 +63,15 @@ public class ShopManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            item.Perchase();
-            GameManager.Instance.RefreshText();
+            if(GameManager.Instance.isPanelOn)
+            {
+                item.Perchase();
+                GameManager.Instance.RefreshText();
+            }
         }
         item.shopRank = shopItems[state].GetComponent<ShopItem>().rank;
+        shopItems[state].GetComponent<ShopItem>().price = item.currentPrice;
         item.shopItem = (Item.ShopItem)state;
+        item.Setting();
     }
 }
