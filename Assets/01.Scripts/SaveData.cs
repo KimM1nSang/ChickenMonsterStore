@@ -1,20 +1,30 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
 public class SaveData
 {
-    public Queue<Chicken> chickens { get; set; }
-    public Queue<FriedPowder> friedPowders { get; set; }
-    public Oil oil { get; set; }
-    public int money { get; set; }
+    public List<Chicken> chickens;
+    public List<FriedPowder> friedPowders;
+    public Oil oil;
 
-    public int reputation { get; set; }
+    public int money;
+
+    public int reputation;
+
+    public float day;
+
+    public float time = 20;
+
+    public bool isDayTime = false;
 
     public SaveData()
     {
-        chickens = new Queue<Chicken>();
-        friedPowders = new Queue<FriedPowder>();
+        isDayTime = false;
+        chickens = new List<Chicken>();
+        friedPowders = new List<FriedPowder>();
         oil = new Oil();
     }
 }

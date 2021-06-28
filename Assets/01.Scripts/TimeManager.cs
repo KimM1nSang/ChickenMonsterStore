@@ -4,30 +4,32 @@ using UnityEngine;
 
 public class TimeManager : MonoBehaviour
 {
-    public float time { get; private set; }
+    public float day { get { return SaveGame.Instance._data.day; } private set { SaveGame.Instance._data.day = value; } }
+    public float time { get { return SaveGame.Instance._data.time; } private set { SaveGame.Instance._data.time = value; } }
+
     private const float dayTime = 20;
-    private bool isDayTime = true;
-    public bool IsDayTime { get { return isDayTime; } private set { isDayTime = value; } }
-    
-    void Start()
-    {
-        
-    }
-    
+    public bool IsDayTime { get { return SaveGame.Instance._data.isDayTime; } private set { SaveGame.Instance._data.isDayTime = value; } }
+
+    public int dayTimeScale = 1;
+
     void Update()
     {
         gameObject.GetComponent<RectTransform>().rotation = Quaternion.Euler(0,0,(time/dayTime) * 360);
     }
     public void SetDayTime(bool isDayTime)
     {
-        this.isDayTime = isDayTime;
+        this.IsDayTime = isDayTime;
     }
     public void SubtractTime(float subtractTime)
     {
-        time -= subtractTime;
+        time -= subtractTime * dayTimeScale;
     }
     public void ResetTime()
     {
         time = dayTime;
+    }
+    public void DayPlus()
+    {
+        day++;
     }
 }

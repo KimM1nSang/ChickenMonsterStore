@@ -9,7 +9,7 @@ public class Customer : MonoBehaviour
     public int index = 0; //¼Õ´ÔÀÇ ¼ø¼­
     public AudioSource CustomerCome;
 
-    public bool isAngry;
+    public bool isAngry = false;
     private void Awake()
     {
         CustomerCome = gameObject.GetComponent<AudioSource>();

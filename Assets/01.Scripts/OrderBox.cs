@@ -7,6 +7,6 @@ public class OrderBox : MonoBehaviour
 {
     void Update()
     {
-        gameObject.GetComponent<RectTransform>().sizeDelta = new Vector3(gameObject.transform.GetChild(0).GetComponent<Text>().text.Length*50, gameObject.GetComponent<RectTransform>().sizeDelta.y);
+        gameObject.GetComponent<RectTransform>().sizeDelta = new Vector3(gameObject.transform.GetChild(0).GetComponent<Text>().text.Length*55, gameObject.GetComponent<RectTransform>().sizeDelta.y);
     }
 }

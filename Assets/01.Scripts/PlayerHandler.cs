@@ -62,8 +62,32 @@ public class PlayerHandler : MonoBehaviour
     // 위쪽 = 손님 접대
     // 가운데 = 총
 
+    // 엔딩
+    // 지원군이 도착하고 나서의 이야기
+    // 평판,돈,총 발사 수에 따라 달라진다.
+
+    // 평판이 높고 돈이 낮고 발사 수가 많으면 지원군이 않오고 마왕성 감옥에 투옥 된다.
+    // 평판이 높고 돈이 낮고 발사 수가 적으면 지원군에게 반동으로 몰려 도망친다.
+    //
+    // 평판이 높고 돈이 높고 발사 수가 많으면 새로운 마왕이 된다.
+    // 평판이 높고 돈이 높고 발사 수가 적으면 지원군과 치킨집 프랜차이즈 장사를 한다.
+    //
+    // 평판이 높고 돈이 높고 발사 수가 0이면 지원군을 쏘고 치킨집을 계속한다.(내 일상을 빼앗지마아!!!!!!!)
+    //
+    // 평판이 낮고 돈이 높고 발사 수가 많으면 지원군을 따라 마왕성을 토벌 한다.
+    // 평판이 낮고 돈이 높고 발사 수가 적으면 지원군을 돈으로 지원하여 마왕성을 무너뜨린다.
+    //
+    // 평판이 낮고 돈이 낮고 발사 수가 많으면 신념에 따라 마왕을 토벌하고 작렬히 전사.
+    // 평판이 낮고 돈이 낮고 발사 수가 적으면 굶고 병들어 지원군에게 구조되어 왕국으로 귀환
+
+
     // 한 사이클
-    // 피드백
+    //
+    // 정비 시간 추가
+    // 날짜 시스템 추가
+    // 날짜 별 이벤트 추가
+    // 엔딩 추가
+    // 
 
     private Transform player;
 
@@ -99,7 +123,6 @@ public class PlayerHandler : MonoBehaviour
         CheckplayerDir();//입력 체크
         MoveAsplayerDir();//입력에 따른 위치 이동
 
-        if (GameManager.Instance.timeManager.IsDayTime == false) return;
         Working();//입력에 따른 행동
     }
 
@@ -139,15 +162,16 @@ public class PlayerHandler : MonoBehaviour
         {
             //발사
             playerState = PlayerState.IDLE;
+            GameManager.Instance.customers.Peek().isAngry = false;
             //Debug.Log(playerState);
+            GameManager.Instance.shootNum++;
             GameManager.Instance.bullet--;//총알 소모
             GameManager.Instance.BulletImage[GameManager.Instance.bullet].GetComponent<UnityEngine.UI.Image>().color = new Color(0,0,0); //총알 소모 이미지 변환
-            DOTween.KillAll();//닷트윈 정지
+            DOTween.Kill("Talk");//닷트윈 정지
             SoundManager.Instance.GunSound.Play();//음원 재생
             GameManager.Instance.CameraShaking(2f);//카메라 흔들기
             GameManager.Instance.OrderTextReset();//택스트를 비운다
             GameManager.Instance.EndDispose();//손님을 퇴장 시킨다.
-
             //예외 처리
             /*if(GameManager.Instance.index >=2)
             {

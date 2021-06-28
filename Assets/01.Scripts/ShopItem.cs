@@ -13,46 +13,41 @@ public class ShopItem : MonoBehaviour
     {
         if (GameManager.Instance.timeManager.IsDayTime) return;
 
-        switch (rank)
-        {
-            case 5:
-                strRank = "A";
-                break;
-
-            case 4:
-                strRank = "B";
-                break;
-
-            case 3:
-                strRank = "C";
-                break;
-
-            case 2:
-                strRank = "D";
-                break;
-
-            case 1:
-                strRank = "E";
-                break;
-
-            case 0:
-                strRank = "F";
-                break;
-        }
+        strRank = ToStringRank(rank);
         gameObject.transform.GetChild(0).GetComponent<Text>().text = strRank;
         gameObject.transform.GetChild(3).GetComponent<Text>().text = price.ToString();
         switch (itemname)
         {
             case "chicken":
-                gameObject.transform.GetChild(4).GetComponent<Text>().text = GameManager.Instance.data.chickens.Count.ToString();
+                gameObject.transform.GetChild(4).GetComponent<Text>().text = SaveGame.Instance.data.chickens.Count.ToString();
                 break;
             case "friedpowder":
-                gameObject.transform.GetChild(4).GetComponent<Text>().text = GameManager.Instance.data.friedPowders.Count.ToString();
+                gameObject.transform.GetChild(4).GetComponent<Text>().text = SaveGame.Instance.data.friedPowders.Count.ToString();
                 break;
             case "oil":
-                gameObject.transform.GetChild(4).GetComponent<Text>().text = GameManager.Instance.data.oil.rank.ToString();
+                gameObject.transform.GetChild(4).GetComponent<Text>().text = ToStringRank(SaveGame.Instance.data.oil.rank);
                 break;
         }
 
+    }
+    private string ToStringRank(int input)
+    {
+        switch (input)
+        {
+            case 5:
+                return "A";
+            case 4:
+                return "B";
+            case 3:
+                return "C";
+            case 2:
+                return "D";
+            case 1:
+                return "E";
+            case 0:
+                return "F";
+            default:
+                return "";
+        }
     }
 }

@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 
 public class Item
 {
@@ -34,10 +36,10 @@ public class Item
 				friedPowder.rank = rank2;
 				break;
 			case ShopItem.oil:
-				int rank3 = GameManager.Instance.data.oil.rank;
-				GameManager.Instance.data.oil.rank = shopRank;
-				currentPrice = GameManager.Instance.data.oil.price * (GameManager.Instance.data.oil.rank + 1);
-				GameManager.Instance.data.oil.rank = rank3;
+				int rank3 = SaveGame.Instance.data.oil.rank;
+				SaveGame.Instance.data.oil.rank = shopRank;
+				currentPrice = SaveGame.Instance.data.oil.price * (SaveGame.Instance.data.oil.rank + 1);
+				SaveGame.Instance.data.oil.rank = rank3;
 				break;
 		}
 	}
@@ -51,10 +53,10 @@ public class Item
 				chicken.rank = shopRank;
 				currentPrice = chicken.price * (chicken.rank + 1);
 				chicken.currentPrice = currentPrice;
-				if (GameManager.Instance.data.money >= currentPrice)
+				if (SaveGame.Instance.data.money >= currentPrice)
 				{
 					DecreaseMoney(currentPrice);
-					GameManager.Instance.data.chickens.Enqueue(chicken);
+					SaveGame.Instance.data.chickens.Add(chicken);
 				}
 				else
 				{
@@ -67,12 +69,12 @@ public class Item
 				friedPowder.rank = shopRank;
 				currentPrice = friedPowder.price * (friedPowder.rank + 1);
 				friedPowder.currentPrice = currentPrice;
-				if (GameManager.Instance.data.money >=currentPrice)
+				if (SaveGame.Instance.data.money >=currentPrice)
 				{
 					DecreaseMoney(currentPrice);
 					for (int i = 0; i < 5; i++)
 					{
-						GameManager.Instance.data.friedPowders.Enqueue(friedPowder);
+						SaveGame.Instance.data.friedPowders.Add(friedPowder);
 					}
 				}
 				else
@@ -81,16 +83,16 @@ public class Item
 				}
 				break;
 			case ShopItem.oil:
-				int rank3 = GameManager.Instance.data.oil.rank;
-				currentPrice = GameManager.Instance.data.oil.price * (GameManager.Instance.data.oil.rank + 1);
-				if (GameManager.Instance.data.money >= currentPrice&& GameManager.Instance.data.oil.rank != shopRank)
+				int rank3 = SaveGame.Instance.data.oil.rank;
+				SaveGame.Instance.data.oil.rank = shopRank;
+				currentPrice = SaveGame.Instance.data.oil.price * (SaveGame.Instance.data.oil.rank + 1);
+				if (SaveGame.Instance.data.money >= currentPrice&& rank3 != shopRank && rank3 <= shopRank)
 				{
-					GameManager.Instance.data.oil.rank = shopRank;
 					DecreaseMoney(currentPrice);
 				}
 				else
 				{
-					GameManager.Instance.data.oil.rank = rank3;
+					SaveGame.Instance.data.oil.rank = rank3;
 				}
 				break;
 		}
@@ -98,13 +100,13 @@ public class Item
 	}
 	private void DecreaseMoney(int decrease)
 	{
-		GameManager.Instance.data.money -= decrease;
+		SaveGame.Instance.data.money -= decrease;
 	}
 	public int rank = 0;
 	public int price = 10;
-
 }
 
+[Serializable]
 public class Chicken : Item
 {
 
@@ -115,18 +117,20 @@ public class Chicken : Item
 
 	public Chicken()
 	{
-		price = 2;
+		price = 3;
 	}
 }
 
+[Serializable]
 public class FriedPowder : Item
 {
 	public FriedPowder()
 	{
-		price = 1;
+		price = 2;
 	}
 }
 
+[Serializable]
 public class Oil : Item
 {
 	public Oil()
