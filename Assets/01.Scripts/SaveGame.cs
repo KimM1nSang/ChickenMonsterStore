@@ -38,7 +38,7 @@ public class SaveGame : MonoBehaviour
     private string filePath = "";
 
 
-    public SaveData _data;
+    private SaveData _data;
 
     public SaveData data
     {

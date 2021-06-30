@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class TimeManager : MonoBehaviour
 {
-    public float day { get { return SaveGame.Instance._data.day; } private set { SaveGame.Instance._data.day = value; } }
-    public float time { get { return SaveGame.Instance._data.time; } private set { SaveGame.Instance._data.time = value; } }
+    public float day { get { return SaveGame.Instance.data.day; } private set { SaveGame.Instance.data.day = value; } }
+    public float time { get { return SaveGame.Instance.data.time; } private set { SaveGame.Instance.data.time = value; } }
 
     private const float dayTime = 20;
-    public bool IsDayTime { get { return SaveGame.Instance._data.isDayTime; } private set { SaveGame.Instance._data.isDayTime = value; } }
+    public bool IsDayTime { get { return SaveGame.Instance.data.isDayTime; } private set { SaveGame.Instance.data.isDayTime = value; } }
+
+    public int dayCheck { get { return SaveGame.Instance.data.dayCheck; } set { SaveGame.Instance.data.dayCheck = value; } }
 
     public int dayTimeScale = 1;
 

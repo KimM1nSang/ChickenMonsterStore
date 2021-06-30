@@ -14,15 +14,18 @@ public class SaveData
 
     public int reputation;
 
-    public float day;
+    public float day = 0;
 
     public float time = 20;
 
     public bool isDayTime = false;
+    public int dayCheck = 1;
 
+    public int shootNum;
+
+    public bool isCutSceneWatched = false;
     public SaveData()
     {
-        isDayTime = false;
         chickens = new List<Chicken>();
         friedPowders = new List<FriedPowder>();
         oil = new Oil();

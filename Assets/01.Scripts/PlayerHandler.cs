@@ -79,15 +79,13 @@ public class PlayerHandler : MonoBehaviour
     //
     // 평판이 낮고 돈이 낮고 발사 수가 많으면 신념에 따라 마왕을 토벌하고 작렬히 전사.
     // 평판이 낮고 돈이 낮고 발사 수가 적으면 굶고 병들어 지원군에게 구조되어 왕국으로 귀환
-
-
+    //
     // 한 사이클
     //
-    // 정비 시간 추가
-    // 날짜 시스템 추가
-    // 날짜 별 이벤트 추가
+    // 정비 시간 추가 (완)
+    // 날짜 시스템 추가 (완)
     // 엔딩 추가
-    // 
+    // 10일 마다 이벤트 발생
 
     private Transform player;
 
@@ -152,19 +150,19 @@ public class PlayerHandler : MonoBehaviour
     }
     private void Gun()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && playerState == PlayerState.IDLE && GameManager.Instance.customers.Count>=1/* && GameManager.Instance.orderState == GameManager.OrderState.BETWEENORDER*/) 
+        if (Input.GetKeyDown(KeyCode.Space) && playerState == PlayerState.IDLE && GameManager.Instance.customers.Count>=1 && GameManager.Instance.orderState != GameManager.OrderState.ORDER) 
         {
             //총을 들기
             playerState = PlayerState.GUN;
             Debug.Log(playerState);
         }
-        else if (Input.GetKeyDown(KeyCode.Space) && GameManager.Instance.bullet > 0 && playerState == PlayerState.GUN && GameManager.Instance.customers.Count >= 1/*&& GameManager.Instance.orderState != GameManager.OrderState.ORDER*/)
+        else if (Input.GetKeyDown(KeyCode.Space) && GameManager.Instance.bullet > 0 && playerState == PlayerState.GUN && GameManager.Instance.customers.Count >= 1&& GameManager.Instance.orderState != GameManager.OrderState.ORDER)
         {
             //발사
             playerState = PlayerState.IDLE;
             GameManager.Instance.customers.Peek().isAngry = false;
             //Debug.Log(playerState);
-            GameManager.Instance.shootNum++;
+            SaveGame.Instance.data.shootNum++;
             GameManager.Instance.bullet--;//총알 소모
             GameManager.Instance.BulletImage[GameManager.Instance.bullet].GetComponent<UnityEngine.UI.Image>().color = new Color(0,0,0); //총알 소모 이미지 변환
             DOTween.Kill("Talk");//닷트윈 정지

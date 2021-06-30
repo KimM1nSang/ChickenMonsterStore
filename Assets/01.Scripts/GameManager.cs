@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using System.Linq;
+using System.Net.NetworkInformation;
 
 public class GameManager : MonoBehaviour
 {
@@ -18,7 +19,6 @@ public class GameManager : MonoBehaviour
 
     [Header("시간")]
     public TimeManager timeManager = null;
-    private int dayCheck = 0;
     private const int endDay = 50;
     public Text dayText = null;
 
@@ -31,7 +31,7 @@ public class GameManager : MonoBehaviour
         ORDERED//주문을 받은 상태, 치킨을 제공할 수 있는 상태
     }
     [SerializeField] private Text orderText = null;//주문을 알려주는 UI
-    private int orderAmount = 0;
+    public int orderAmount = 0;
     [Header("손님")]
     public Queue<Customer> customers = new Queue<Customer>();//손님을 저장하는 큐
     public Image attckPanel = null;
@@ -71,7 +71,6 @@ public class GameManager : MonoBehaviour
     [Header("총알")]
     public int bullet = 0;//총알 곗수
     private const int bulletLimit = 3;//총알갯수의 한계
-    public int shootNum = 0;
     public Image[] BulletImage = null;//총알의 갯수를 알려줄 UI
     [Header("게임오버")]
     public Image gameOverPanel = null;//게임오버 판넬
@@ -79,11 +78,18 @@ public class GameManager : MonoBehaviour
     public Transform shopPanel = null;
     public Text[] moneyText = null;
     public bool isPanelOn = false;
+    public Vector3 panelDownPos = new Vector3(0, -10, 0);
     [Header("평판")]
     public Text reputationText = null;
     [Header("엔딩")]
     public Transform endingPopup = null;
     private bool isEnding = false;
+    [Header("이벤트")]
+    public Sprite[] eventCustomerImage = null;
+    public int eventNum = 0;
+    private bool isEventSpawn = false;
+    private bool isEvent = false;
+    public TalkManager talkManager = null;
     private void Awake()
     {
         Instance = this;
@@ -93,15 +99,6 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //Debug.Log(customers.Count);
-        //Debug.Log(canCreate);
-        /*if(Input.GetKeyDown(KeyCode.Space))
-        {
-            RefreshText();
-        }*/
-            //Debug.Log(timeManager.time);
-  
-
         if(!isEnding)
         {
             timeManager.SubtractTime(Time.deltaTime);
@@ -113,6 +110,10 @@ public class GameManager : MonoBehaviour
                     if (timeManager.day == endDay)
                     {
                         Ending();
+                        foreach (var item in customers)
+                        {
+                            item.ExitTheStore(new Vector3(1,0,0));
+                        }
                     }
                     else
                     {
@@ -122,14 +123,13 @@ public class GameManager : MonoBehaviour
                             //Destroy(item.gameObject);
                             if (item.index != 0)
                             {
-                                item.ExitTheStore();
+                                item.ExitTheStore(new Vector3(0, -1, 0));
                             }
                         }
                     }
                 }
                 else
                 {
-                    customers.Clear();
                     OrderTextReset();
                     shopPanel.gameObject.transform.DOMove(new Vector3(0, -10, 0), .5f).OnComplete(() =>
                     {
@@ -139,12 +139,11 @@ public class GameManager : MonoBehaviour
 
                 }
                 timeManager.ResetTime();
-                ResetWorkHistory();
                 GameReset();
-                dayCheck++;
-                if (dayCheck >= 2)
+                timeManager.dayCheck++;
+                if (timeManager.dayCheck >= 2)
                 {
-                    dayCheck = 0;
+                    timeManager.dayCheck = 0;
                     timeManager.DayPlus();
                     RefreshText();
                 }
@@ -154,41 +153,51 @@ public class GameManager : MonoBehaviour
 
             if (timeManager.IsDayTime)
             {
-                if (orderState == OrderState.ORDERED)//인내심 감소
-                    ProgressBarDown(ref waitingTime, waitingTimeLimit, downWaitingTime, ref WaitingTimeprogressBar);
-                if (waitingTime <= 0)
+                if (timeManager.day % 10 == 0 && timeManager.day != 50)
                 {
-                    //손님이 화남
-                    //Debug.Log("ANGRY");
-
-                    orderText.DOText("언제 주는거야!!!!!", 2f).SetId("Talk").OnComplete(() => {
-                        StartCoroutine(CustomerAttack());
-                    });
+                    isEvent = true;
+                    eventNum = (int)timeManager.day/10;
+                    //1.마왕성 경비병 시바개
+                    //2.마왕성 교도관 불만두
+                    //3.길잃은 모험가 쥬쥬(마왕성 교도서에서 도망침)
+                    //4.마왕 곰돌이
+                    if(!isEventSpawn)
+                    {
+                        isEventSpawn = true;
+                        CreateCustomer();
+                    }
                 }
+                else
+                {
+                    isEvent = false;
+                    //손님 생성
+                    SpawningCustomer();
+
+                    if (orderState == OrderState.ORDERED)//인내심 감소
+                        ProgressBarDown(ref waitingTime, waitingTimeLimit, downWaitingTime, ref WaitingTimeprogressBar);
+                    if (waitingTime <= 0)
+                    {
+                        //손님이 화남
+                        //Debug.Log("ANGRY");
+
+                        orderText.DOText("언제 주는거야!!!!!", 2f).SetId("Talk").OnComplete(() => {
+                            StartCoroutine(CustomerAttack());
+                        });
+                    }
 
 
-                //손님 생성
-                SpawningCustomer();
+                }
 
             }
             else
             {
                 if (Input.GetKeyDown(KeyCode.LeftAlt))
                 {
-                    if (!isPanelOn)
+                    Vector3 panelPos = isPanelOn ? panelDownPos : Vector3.zero;
+                    shopPanel.gameObject.transform.DOMove(panelPos, .5f).OnComplete(() =>
                     {
-                        shopPanel.gameObject.transform.DOMove(Vector3.zero, .5f).OnComplete(() => {
-                            isPanelOn = true;
-                        });
-                    }
-                    else
-                    {
-                        shopPanel.gameObject.transform.DOMove(new Vector3(0, -10, 0), .5f).OnComplete(() =>
-                        {
-                            isPanelOn = false;
-                        });
-                    }
-
+                        isPanelOn = !isPanelOn;
+                    });
                 }
             }
 
@@ -209,7 +218,7 @@ public class GameManager : MonoBehaviour
     {
         if (customers != null && customers.Count >= 2 && customers.Last().index == 2) 
             return;
-        Customer.Create(customerPrefab, customerFirstPosition.position);//Customer 클래스의 생성함수 호출
+        Customer.Create(customerPrefab, customerFirstPosition.position, isEvent);//Customer 클래스의 생성함수 호출
 
     }
 
@@ -234,69 +243,48 @@ public class GameManager : MonoBehaviour
         if (orderState != OrderState.ORDER) return;//스테이트가 ORDER 가 아니면 리턴
         orderState = OrderState.BETWEENORDER;
 
-        orderAmount = RandomAmount(3);//주문 갯수 랜덤
+        customers.Peek().isAngry = false;
         waitingTime = customers.Peek().WaitingTime;//손님에 따른 인내심 세팅
         downWaitingTime = customers.Peek().DownWaitingTime;//손님에 따른 인내심 감소치 세팅
         OrderTextReset();//텍스트 리셋
 
-        string chickenOrderTxt ="";
-        switch (customers.Peek().customerType)
+        if(customers.Peek().customerType == Customer.CustomerType.NORMAL)
         {
-            case Customer.CustomerType.NORMAL:
-                chickenOrderTxt = $"치킨 {orderAmount}마리 주세요";
-                break;
-            case Customer.CustomerType.LATTE:
-                chickenOrderTxt = $"그 치킨 {orderAmount}개만 좀 줘봐";
-                break;
-            case Customer.CustomerType.ROBBER:
-                chickenOrderTxt = "저는 치킨 강도에요 당신의 치킨을 가지러 왔어요.";
-                break;
+            orderAmount = RandomAmount(3);//주문 갯수 랜덤
+            orderText.DOText($"치킨 {orderAmount}마리 주세요", 3f).SetId("Talk").OnComplete(() => {
+                orderState = OrderState.ORDERED;//상태 변환(치킨을 제공 할 수 있게)
+            });
         }
-        orderText.DOText(chickenOrderTxt, 3f).SetId("Talk").OnComplete(() => {
-            switch (customers.Peek().customerType)
+        else
+        {
+            orderAmount = 1;
+            Talk((int)customers.Peek().customerType, 0);
+        }
+    }
+
+    private void Talk(int id,int talkIndex)
+    {
+        OrderTextReset();
+        string talkData = talkManager.GetTalk(id, talkIndex);
+        //상태 변환(치킨을 제공 할 수 있게)
+        if (talkData != null)
+        {
+            orderText.DOText(talkData, talkData.Length/5).SetId("Talk").OnComplete(() =>
             {
-                case Customer.CustomerType.NORMAL:
-                    break;
-                case Customer.CustomerType.LATTE:
-                    OrderTextReset();
-                    Sequence seq = DOTween.Sequence();
-                    seq.Join(
-                    orderText.DOText("그런데 말이야", 1f).OnComplete(() => {
-                        OrderTextReset();
-                        orderText.DOText("이", .1f).OnComplete(() => {
-                            OrderTextReset();
-                            orderText.DOText("치킨이란게 참 신기해", 1.5f).OnComplete(() => {
-                                OrderTextReset();
-                                orderText.DOText("나때는 이런 그... 뭐냐 크런키?", 1.5f).OnComplete(() => {
-                                OrderTextReset();
-                                    orderText.DOText("그런게 없었거든", 1.5f).OnComplete(() => {
-                                            OrderTextReset();
-                                        orderText.DOText("지금 나 늙었다고 무시하는거야?", 1.5f).OnComplete(() => {
-                                            OrderTextReset();
-                                            orderText.DOText("허,참 어이가 없어서", 1.5f).OnComplete(() => {
-                                                OrderTextReset();
-                                                orderText.DOText("니가 두발로 걷기 시작할때 말이야", 1.5f).OnComplete(() => {
-                                                    OrderTextReset();
-                                                    orderText.DOText("어?", 1.5f).OnComplete(() => {
-
-                                                    });
-                                                });
-                                            });
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    })
-                    );
-                    seq.SetId("Talk");
-                    break;
-                case Customer.CustomerType.ROBBER:
-                    break;
+                Talk(id, ++talkIndex);
+            });
+        }
+        if(id >2 && id<7)
+        {
+            if (talkData == null)
+            {
+                orderState = OrderState.ORDERED;
             }
-            orderState = OrderState.ORDERED;//상태 변환(치킨을 제공 할 수 있게)
-        });
-
+        }
+        else
+        {
+            orderState = OrderState.ORDERED;
+        }
     }
     public int RandomAmount(int maxAmount)
     {
@@ -314,34 +302,28 @@ public class GameManager : MonoBehaviour
         if (orderState != OrderState.ORDERED) return;//스테이트가 ORDERED 가 아니면 리턴
         orderState = OrderState.BETWEENORDER;
 
-        DOTween.KillAll();
+        DOTween.Kill("Talk");
         OrderTextReset();
         if (madeChickens.Count == orderAmount && IsGoodChickenInHere())
         {
             orderText.DOText("잊을 수 없는 이 치킨의 맛!", 2f).SetId("Talk").OnComplete(() => {
                 EndDispose();
-
+                ClearCustomerQueue();
             });
-            for (int i = 0; i < orderAmount; i++)
-            {
-                SaveGame.Instance.data.money += madeChickens[i].currentPrice *2;
-            }
-            SaveGame.Instance.data.reputation += 100;
+            AddMoney(3f);
+            IncreaseReputation(100);
         }
         else if (madeChickens.Count <= 0)
         {
-            orderText.DOText("날 기망 하는거냐!!!!!!", 2f).SetId("Talk").OnComplete(() => {
-                ReadyToAttack();
-            });
-            SaveGame.Instance.data.reputation -= 70;
+            ReadyToAttack(7, 0);
+
+            DecreaseReputation(70);
         }
         else if (madeChickens.Count != orderAmount)
         {
-            orderText.DOText("갯수가 틀렸잖아!!!!!!!!!!!!!!", 2f).SetId("Talk").OnComplete(() => {
-                ReadyToAttack();
-            });
+            ReadyToAttack(8, 0);
 
-            SaveGame.Instance.data.reputation -= 20;
+            DecreaseReputation(20);
         }
         else
         {
@@ -355,14 +337,9 @@ public class GameManager : MonoBehaviour
             }
             if (isBad > 0)
             {
-                orderText.DOText("튀김상태가 이게 뭐야!!!!!!!!!!!!.", 2f).SetId("Talk").OnComplete(() => {
-                    ReadyToAttack();
-                });
-                for (int i = 0; i < orderAmount; i++)
-                {
-                    SaveGame.Instance.data.money += madeChickens[i].currentPrice /2;
-                }
-                SaveGame.Instance.data.reputation -= 30;
+                ReadyToAttack(9,0);
+                AddMoney(0.5f);
+                DecreaseReputation(30);
             }
         }
         RefreshText();
@@ -370,10 +347,33 @@ public class GameManager : MonoBehaviour
         waitingTime = waitingTimeLimit;
         orderAmount = 0;
     }
-    public void ReadyToAttack()
+    public void ClearCustomerQueue()
     {
-        StartCoroutine(CustomerAttack());
-        OrderTextReset();
+        if (!timeManager.IsDayTime)
+            customers.Clear();
+    }
+    public void AddMoney(float multiply)
+    {
+        for (int i = 0; i < orderAmount; i++)
+        {
+            SaveGame.Instance.data.money += (int)(madeChickens[i].currentPrice * multiply);
+        }
+    }
+    public void DecreaseReputation(int decreaseNum)//평판 감소
+    {
+        SaveGame.Instance.data.reputation -= decreaseNum;
+    }
+    public void IncreaseReputation(int increaseNum)//평판 증가
+    {
+        SaveGame.Instance.data.reputation += increaseNum;
+    }
+    public void ReadyToAttack(int id,int talkIndex)//공격 대사
+    {
+        string talkData = talkManager.GetTalk(id, talkIndex);
+        orderText.DOText(talkData, 2f).SetId("Talk").OnComplete(() => {
+            OrderTextReset();
+            StartCoroutine(CustomerAttack());
+        });
     }
     public bool IsGoodChickenInHere()
     {
@@ -390,9 +390,10 @@ public class GameManager : MonoBehaviour
     public void EndDispose()//손님 퇴장 및 상태 원상 복구(주문을 받을 수 있는 원래의 상태로 복구)
     {
         OrderTextReset();
-        customers.Peek().ExitTheStore();//퇴장
+        customers.Peek().ExitTheStore(new Vector3(1, 0, 0));//퇴장
         orderState = OrderState.ORDER;//상태 복구
     }
+
     public IEnumerator CustomerAttack()
     {
         customers.Peek().isAngry = true;
@@ -406,17 +407,24 @@ public class GameManager : MonoBehaviour
         {
             GameOver();
         }
+        else
+        {
+            ClearCustomerQueue();
+        }
         attckPanel.gameObject.SetActive(false);
 
     }
+
     public void PullCustomer()//전체 위치 이동
     {
         foreach (var item in customers)
         {
-            if(item.index !=0)
+
+            item.index--;//인덱스 감소
+            item.MovePosition();//이동
+            if (item.index <0)
             {
-                item.index--;//인덱스 감소
-                item.MovePosition();//이동
+                Destroy(item.gameObject);
             }
         }
         customers.Dequeue();//손님 제거
@@ -525,13 +533,13 @@ public class GameManager : MonoBehaviour
             orderState = OrderState.ORDER;
             waitingTime = waitingTimeLimit;
             OrderTextReset();
-
         }
         bullet = bulletLimit;
         foreach (var item in BulletImage)
         {
             item.gameObject.GetComponent<Image>().color = new Color(1, 1, 1);
         }
+        shopPanel.transform.position = panelDownPos;
         gameOverPanel.gameObject.SetActive(false);
     }
     public void GameOver()
@@ -549,6 +557,7 @@ public class GameManager : MonoBehaviour
     public void Ending()
     {
         isEnding = true;
+        timeManager.dayTimeScale = 0;
         endingPopup.gameObject.SetActive(true);
 
     }

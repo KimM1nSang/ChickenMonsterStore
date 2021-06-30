@@ -32,14 +32,14 @@ public class ShopManager : MonoBehaviour
     }
     private void ShopChoose()
     {
-        if (GameManager.Instance.timeManager.IsDayTime || !GameManager.Instance.shopPanel.gameObject.activeSelf) return;
-        if(Input.GetKeyDown(KeyCode.RightArrow)&& state < 2 && IsCanMove && GameManager.Instance.isPanelOn)
+        if (GameManager.Instance.timeManager.IsDayTime || !GameManager.Instance.isPanelOn) return;
+        if(Input.GetKeyDown(KeyCode.RightArrow)&& state < 2 && IsCanMove)
         {
             IsCanMove = false;
             state++;
             shopContents.DOMoveX(shopContents.position.x - 6, .1f).OnComplete(() => { IsCanMove = true; });
         }
-        if (Input.GetKeyDown(KeyCode.LeftArrow) && state > 0 && IsCanMove && GameManager.Instance.isPanelOn)
+        if (Input.GetKeyDown(KeyCode.LeftArrow) && state > 0 && IsCanMove)
         {
             IsCanMove = false;
             state--;
@@ -63,11 +63,8 @@ public class ShopManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if(GameManager.Instance.isPanelOn)
-            {
-                item.Perchase();
-                GameManager.Instance.RefreshText();
-            }
+            item.Perchase();
+            GameManager.Instance.RefreshText();
         }
         item.shopRank = shopItems[state].GetComponent<ShopItem>().rank;
         shopItems[state].GetComponent<ShopItem>().price = item.currentPrice;
