@@ -1,11 +1,5 @@
-using Microsoft.Unity.VisualStudio.Editor;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using DG.Tweening;
-using Cinemachine;
-using System;
 
 public class PlayerHandler : MonoBehaviour
 {
