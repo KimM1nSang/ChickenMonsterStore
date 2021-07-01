@@ -20,7 +20,7 @@ public class TimeManager : MonoBehaviour
     }
     public void SetDayTime(bool isDayTime)
     {
-        this.IsDayTime = isDayTime;
+        SaveGame.Instance.data.isDayTime = isDayTime;
     }
     public void SubtractTime(float subtractTime)
     {

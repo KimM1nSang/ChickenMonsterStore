@@ -133,6 +133,10 @@ public class Customer : MonoBehaviour
             }
             else
             {
+                if(index == 0)
+                {
+                    GameManager.Instance.customers.Clear();
+                }
                 Destroy(gameObject);//현 오브젝트 삭제
             }
             //Debug.Log(index);

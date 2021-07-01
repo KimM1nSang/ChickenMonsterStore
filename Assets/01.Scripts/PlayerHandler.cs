@@ -144,13 +144,13 @@ public class PlayerHandler : MonoBehaviour
     }
     private void Gun()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && playerState == PlayerState.IDLE && GameManager.Instance.customers.Count>=1 && GameManager.Instance.orderState != GameManager.OrderState.ORDER) 
+        if (Input.GetKeyDown(KeyCode.Space) && playerState == PlayerState.IDLE && GameManager.Instance.customers.Count>=1 && GameManager.Instance.orderState != GameManager.OrderState.ORDER && GameManager.Instance.isPanelOn) 
         {
             //총을 들기
             playerState = PlayerState.GUN;
             Debug.Log(playerState);
         }
-        else if (Input.GetKeyDown(KeyCode.Space) && GameManager.Instance.bullet > 0 && playerState == PlayerState.GUN && GameManager.Instance.customers.Count >= 1&& GameManager.Instance.orderState != GameManager.OrderState.ORDER)
+        else if (Input.GetKeyDown(KeyCode.Space) && GameManager.Instance.bullet > 0 && playerState == PlayerState.GUN && GameManager.Instance.customers.Count >= 1&& GameManager.Instance.orderState != GameManager.OrderState.ORDER && GameManager.Instance.isPanelOn)
         {
             //발사
             playerState = PlayerState.IDLE;

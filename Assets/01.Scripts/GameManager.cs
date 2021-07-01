@@ -146,11 +146,10 @@ public class GameManager : MonoBehaviour
                         isPanelOn = false;
                     });
                     timeManager.SetDayTime(true);
-
                 }
                 timeManager.ResetTime();
                 GameReset();
-                timeManager.dayCheck++;
+                ++timeManager.dayCheck;
                 if (timeManager.dayCheck >= 2)
                 {
                     timeManager.dayCheck = 0;
@@ -163,18 +162,21 @@ public class GameManager : MonoBehaviour
 
             if (timeManager.IsDayTime)
             {
-                if (timeManager.day % 10 == 0 && timeManager.day != 50)
+                if (timeManager.day % 10 == 0)
                 {
-                    isEvent = true;
-                    eventNum = (int)timeManager.day/10;
-                    //1.마왕성 경비병 시바개
-                    //2.마왕성 교도관 불만두
-                    //3.길잃은 모험가 쥬쥬(마왕성 교도서에서 도망침)
-                    //4.마왕 곰돌이
-                    if(!isEventSpawn)
+                    if (timeManager.day != 50)
                     {
-                        isEventSpawn = true;
-                        CreateCustomer();
+                        isEvent = true;
+                        eventNum = (int)timeManager.day / 10;
+                        //1.마왕성 경비병 시바개
+                        //2.마왕성 교도관 불만두
+                        //3.길잃은 모험가 쥬쥬(마왕성 교도서에서 도망침)
+                        //4.마왕 곰돌이
+                        if (!isEventSpawn)
+                        {
+                            isEventSpawn = true;
+                            CreateCustomer();
+                        }
                     }
                 }
                 else
