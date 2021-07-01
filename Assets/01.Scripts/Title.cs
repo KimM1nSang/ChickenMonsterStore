@@ -89,10 +89,12 @@ public class Title : MonoBehaviour
                     ReadyToGameStart();
                     break;
                 case 2://도움말
-                    isMoved = !isMoved;
-                    isChoosed = !isMoved;
+                    isChoosed = false;
                     float pos = isMoved ? btnsFirstPosition.x - 1100 : btnsFirstPosition.x;
-                    btns.DOMoveX(pos, 1);
+                    btns.DOMoveX(pos, 1).OnComplete(()=> {
+                        isMoved = !isMoved;
+                        isChoosed = !isMoved;
+                    });
                     break;
                 case 3://나가기
                     titleText[index].text = "ReallyExit";

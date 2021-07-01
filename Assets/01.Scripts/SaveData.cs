@@ -25,6 +25,7 @@ public class SaveData
 
     public bool isCutSceneWatched = false;
     public bool IsHaveData = false;
+
     public SaveData()
     {
         chickens = new List<Chicken>();
