@@ -39,7 +39,7 @@ public class Customer : MonoBehaviour
         if (isEventCustomer)
         {
             int eventNum = GameManager.Instance.eventNum;
-            
+            c.gameObject.transform.localScale += new Vector3(.5f, .5f);
             c.SettingEventCustomer(eventNum);
             c.gameObject.GetComponent<SpriteRenderer>().sprite = GameManager.Instance.eventCustomerImage[eventNum-1];
         }

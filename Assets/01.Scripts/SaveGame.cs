@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 using System.Security.Cryptography;
+using Newtonsoft.Json.Bson;
 
 public class SaveGame : MonoBehaviour
 {
@@ -58,6 +59,13 @@ public class SaveGame : MonoBehaviour
     {
         filePath = string.Concat(Application.persistentDataPath, GameDataFileName);
         Debug.Log(filePath);
+    }
+
+    public void NewGameData()
+    {
+        Debug.Log("货肺款 颇老 积己");
+        _data = new SaveData();
+        data.money = 200;
     }
 
     public static string Decrypt(string textToDecrypt, string key)
@@ -162,9 +170,7 @@ public class SaveGame : MonoBehaviour
         }
         else
         {
-            Debug.Log("货肺款 颇老 积己");
-            _data = new SaveData();
-            data.money = 200;
+            NewGameData();
         }
 
     }

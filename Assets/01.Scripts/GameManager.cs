@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
         ORDER,//주문을 받을 수 있는 상태, 치킨을 제공하지 못 하는 상태
         ORDERED//주문을 받은 상태, 치킨을 제공할 수 있는 상태
     }
-    [SerializeField] private Text orderText = null;//주문을 알려주는 UI
+    public Text orderText = null;//주문을 알려주는 UI
     public int orderAmount = 0;
     [Header("손님")]
     public Queue<Customer> customers = new Queue<Customer>();//손님을 저장하는 큐
@@ -83,6 +83,11 @@ public class GameManager : MonoBehaviour
     public Text reputationText = null;
     [Header("엔딩")]
     public Transform endingPopup = null;
+    public string endingStartStr;
+    public Transform afterCome = null;
+    public Text endingText = null;
+    private int endingIndex = 0;
+    public Image endingSprite;
     private bool isEnding = false;
     [Header("이벤트")]
     public Sprite[] eventCustomerImage = null;
@@ -90,16 +95,21 @@ public class GameManager : MonoBehaviour
     private bool isEventSpawn = false;
     private bool isEvent = false;
     public TalkManager talkManager = null;
+    [Header("일시정지")]
+    public Transform pausePanel;
+
+    public SpriteManager spriteManager;
     private void Awake()
     {
         Instance = this;
         GameReset();//시작하자마자 함수 실행
+        SaveGame.Instance.data.IsHaveData = true;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(!isEnding)
+        if(!isEnding && timeManager.dayTimeScale != 0)
         {
             timeManager.SubtractTime(Time.deltaTime);
 
@@ -130,7 +140,7 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    OrderTextReset();
+                    TextReset(orderText);
                     shopPanel.gameObject.transform.DOMove(new Vector3(0, -10, 0), .5f).OnComplete(() =>
                     {
                         isPanelOn = false;
@@ -175,7 +185,7 @@ public class GameManager : MonoBehaviour
 
                     if (orderState == OrderState.ORDERED)//인내심 감소
                         ProgressBarDown(ref waitingTime, waitingTimeLimit, downWaitingTime, ref WaitingTimeprogressBar);
-                    if (waitingTime <= 0)
+                    if (waitingTime <= 10)
                     {
                         //손님이 화남
                         //Debug.Log("ANGRY");
@@ -205,14 +215,21 @@ public class GameManager : MonoBehaviour
             //기름 온도 감소
             ProgressBarDown(ref oilTemp, oilLimit, downOilTemp, ref OilprogressBar);
 
-
-            //튀김 진행도 감소
-            //ProgressBarDown(ref FriedCurValue, 100, 1 , ref FriedprogressBar);
+            if(Input.GetKeyDown(KeyCode.Escape))
+            {
+                PanelActive();
+            }
         }
         else
         {
             timeManager.dayTimeScale = 0;
         }
+    }
+    public void PanelActive()
+    {
+        pausePanel.gameObject.SetActive(!pausePanel.gameObject.activeSelf);
+        timeManager.dayTimeScale = pausePanel.gameObject.activeSelf ? 0 : 1;
+        Time.timeScale = pausePanel.gameObject.activeSelf ? 0 : 1;
     }
     public void CreateCustomer()//손님 생성 함수
     {
@@ -222,9 +239,9 @@ public class GameManager : MonoBehaviour
 
     }
 
-    public void OrderTextReset()//주문 텍스트 리셋(지우기)
+    public void TextReset(Text text)//주문 텍스트 리셋(지우기)
     {
-        orderText.text = "";
+        text.text = "";
     }
     public void CameraShaking(float force)//주어진 값으로 카메라 흔드는 함수
     {
@@ -246,7 +263,7 @@ public class GameManager : MonoBehaviour
         customers.Peek().isAngry = false;
         waitingTime = customers.Peek().WaitingTime;//손님에 따른 인내심 세팅
         downWaitingTime = customers.Peek().DownWaitingTime;//손님에 따른 인내심 감소치 세팅
-        OrderTextReset();//텍스트 리셋
+        TextReset(orderText);//텍스트 리셋
 
         if(customers.Peek().customerType == Customer.CustomerType.NORMAL)
         {
@@ -258,34 +275,61 @@ public class GameManager : MonoBehaviour
         else
         {
             orderAmount = 1;
-            Talk((int)customers.Peek().customerType, 0);
+            Talk(orderText,(int)customers.Peek().customerType, 0);
         }
     }
 
-    private void Talk(int id,int talkIndex)
+    private void Talk(Text text, int id,int talkIndex)
     {
-        OrderTextReset();
+        int customerType = (int)customers.Peek().customerType;
+
         string talkData = talkManager.GetTalk(id, talkIndex);
-        //상태 변환(치킨을 제공 할 수 있게)
+        if(isEnding)
+        {
+            EndingImage(endingSprite, id -10, talkIndex);
+        }
+        
         if (talkData != null)
         {
-            orderText.DOText(talkData, talkData.Length/5).SetId("Talk").OnComplete(() =>
+            TextReset(text);
+            int leng;
+            text.DOText(talkData, leng = talkData.Length >3 ? talkData.Length/5 : talkData.Length).SetId("Talk").OnComplete(() =>
             {
-                Talk(id, ++talkIndex);
+                Talk(text,id, ++talkIndex);
             });
         }
-        if(id >2 && id<7)
+        else
         {
-            if (talkData == null)
+            if (customerType >= 3 && customerType <= 6 && orderState == OrderState.ORDERED)
+            {
+                EndDispose();
+            }
+        }
+        if(!isEnding)
+        {
+            if (id > 2 && id < 7)
+            {
+                if (talkData == null)
+                {
+                    orderState = OrderState.ORDERED;
+                }
+            }
+            else
             {
                 orderState = OrderState.ORDERED;
             }
         }
-        else
+    }
+
+    private void EndingImage(Image image,int id,int imageIndex)
+    {
+        Sprite imageData = spriteManager.GetImage(id, imageIndex);
+        if (imageData != null)
         {
-            orderState = OrderState.ORDERED;
+            endingSprite.sprite = imageData;
         }
     }
+
     public int RandomAmount(int maxAmount)
     {
         if (Random.Range(0, 99) == 0)
@@ -302,9 +346,32 @@ public class GameManager : MonoBehaviour
         if (orderState != OrderState.ORDERED) return;//스테이트가 ORDERED 가 아니면 리턴
         orderState = OrderState.BETWEENORDER;
 
+        int isBad = 0;
+        for (int i = 0; i < madeChickens.Count; i++)
+        {
+            if (madeChickens[i].IsGood == false)
+            {
+                isBad++;
+            }
+        }
+
         DOTween.Kill("Talk");
-        OrderTextReset();
-        if (madeChickens.Count == orderAmount && IsGoodChickenInHere())
+        TextReset(orderText);
+        int customerType = (int)customers.Peek().customerType;
+        if (customerType == 2)
+        {
+            SaveGame.Instance.data.chickens.Clear();
+            SaveGame.Instance.data.money -= 10;
+            orderText.DOText("잘 놀다 갑니다 킥킥", 2f).SetId("Talk").OnComplete(() => {
+                EndDispose();
+                ClearCustomerQueue();
+            });
+        }
+        else if(customerType >= 3 && customerType <= 6)
+        {
+            Talk(orderText, (int)customers.Peek().customerType + 100, 0);
+        }
+        else if (madeChickens.Count == orderAmount && IsGoodChickenInHere())
         {
             orderText.DOText("잊을 수 없는 이 치킨의 맛!", 2f).SetId("Talk").OnComplete(() => {
                 EndDispose();
@@ -316,32 +383,26 @@ public class GameManager : MonoBehaviour
         else if (madeChickens.Count <= 0)
         {
             ReadyToAttack(7, 0);
-
+            
             DecreaseReputation(70);
+        }
+        else if (isBad > 0)
+        {
+            
+            ReadyToAttack(9, 0);
+            AddMoney(0.5f);
+            DecreaseReputation(30);
         }
         else if (madeChickens.Count != orderAmount)
         {
-            ReadyToAttack(8, 0);
-
+            string text = talkManager.GetTalk(8, 0);
+            orderText.DOText(text, 2f).SetId("Talk").OnComplete(() => {
+                EndDispose();
+                ClearCustomerQueue();
+            });
             DecreaseReputation(20);
         }
-        else
-        {
-            int isBad = 0;
-            for (int i = 0; i < madeChickens.Count; i++)
-            {
-                if (madeChickens[i].IsGood == false)
-                {
-                    isBad++;
-                }
-            }
-            if (isBad > 0)
-            {
-                ReadyToAttack(9,0);
-                AddMoney(0.5f);
-                DecreaseReputation(30);
-            }
-        }
+
         RefreshText();
         madeChickens.Clear();
         waitingTime = waitingTimeLimit;
@@ -371,7 +432,7 @@ public class GameManager : MonoBehaviour
     {
         string talkData = talkManager.GetTalk(id, talkIndex);
         orderText.DOText(talkData, 2f).SetId("Talk").OnComplete(() => {
-            OrderTextReset();
+            TextReset(orderText);
             StartCoroutine(CustomerAttack());
         });
     }
@@ -389,7 +450,7 @@ public class GameManager : MonoBehaviour
     }
     public void EndDispose()//손님 퇴장 및 상태 원상 복구(주문을 받을 수 있는 원래의 상태로 복구)
     {
-        OrderTextReset();
+        TextReset(orderText);
         customers.Peek().ExitTheStore(new Vector3(1, 0, 0));//퇴장
         orderState = OrderState.ORDER;//상태 복구
     }
@@ -451,6 +512,8 @@ public class GameManager : MonoBehaviour
                 SoundManager.Instance.Fried.Play();//음원 재생
                 if (FriedCurValue >= 100 && !isFriedNow)//다 튀겼으면 리셋
                 {
+                    CameraShaking(1f);
+                    SoundManager.Instance.FriedComplete.Play(); 
                     isFriedNow = true;
                     //Debug.Log(SaveGame.Instance.data.chickens.Peek().currentPrice);
                     SaveGame.Instance.data.chickens[0].IsGood = IsRightOilTemp();//치킨의 상태 체크
@@ -490,6 +553,7 @@ public class GameManager : MonoBehaviour
         {
             if (oilTemp < oilLimit)
             {
+                CameraShaking(0.5f);
                 oilTemp += workingPower * (SaveGame.Instance.data.friedPowders[0].rank +1);
                 SoundManager.Instance.Oil.Play();
             }
@@ -532,7 +596,7 @@ public class GameManager : MonoBehaviour
         {
             orderState = OrderState.ORDER;
             waitingTime = waitingTimeLimit;
-            OrderTextReset();
+            TextReset(orderText);
         }
         bullet = bulletLimit;
         foreach (var item in BulletImage)
@@ -554,11 +618,103 @@ public class GameManager : MonoBehaviour
         });
     }
 
+    // 1 평판이 높고 돈이 낮고 발사 수가 많으면 지원군이 않오고 마왕성 감옥에 투옥 된다.
+    // 2 평판이 높고 돈이 낮고 발사 수가 적으면 지원군에게 반동으로 몰려 도망친다.
+    //
+    // 3 평판이 높고 돈이 높고 발사 수가 많으면 새로운 마왕이 된다.
+    // 4 평판이 높고 돈이 높고 발사 수가 적으면 지원군과 치킨집 프랜차이즈 장사를 한다.
+    //
+    // 5 평판이 낮고 돈이 높고 발사 수가 많으면 지원군을 따라 마왕성을 토벌 한다.
+    // 6 평판이 낮고 돈이 높고 발사 수가 적으면 지원군을 돈으로 지원하여 마왕성을 무너뜨린다.
+    //
+    // 7 평판이 낮고 돈이 낮고 발사 수가 많으면 신념에 따라 마왕을 토벌하고 작렬히 전사.
+    // 8 평판이 낮고 돈이 낮고 발사 수가 적으면 굶고 병들어 지원군에게 구조되어 왕국으로 귀환
+    //
+    // 9 평판이 높고 돈이 높고 발사 수가 0이면 지원군을 쏘고 치킨집을 계속한다.(내 일상을 빼앗지마아!!!!!!!)
     public void Ending()
     {
         isEnding = true;
         timeManager.dayTimeScale = 0;
         endingPopup.gameObject.SetActive(true);
+        endingPopup.GetChild(0).GetComponent<Text>().DOText(endingStartStr, endingStartStr.Length/4).OnComplete(()=>{
+            //엔딩 인덱스 정해주기
+            endingIndex = 1;
+            var data = SaveGame.Instance.data;
+
+            bool isRich = data.money >= 300;
+            bool isPoor = data.money <= 100;
+
+            bool isFamous = data.reputation < 300;
+            bool isUnknown = data.reputation > 1000;
+
+            bool isPeacefull = data.shootNum < 1;
+            bool isWild = data.shootNum >=1 && data.shootNum < 30;
+            bool isVeryWild = data.shootNum >= 30;
+            bool isVeryVeryWild = data.shootNum >= 140;
+
+            bool firstEnding = isFamous && isPoor  && isVeryWild;
+            bool secondEnding = isFamous && isPoor && isWild;
+
+            bool thirdEnding = isFamous && isRich && isVeryWild;
+            bool fourthEnding = isFamous && isRich && isWild;
+
+            bool fifthEnding = isUnknown && isRich && isVeryWild;
+            bool sixthEnding = isUnknown && isRich && isWild;
+
+            bool seventhEnding = isUnknown && isPoor && isVeryWild;
+            bool eightEnding = isUnknown && isPoor && isWild;
+
+            bool ninthEnding = isFamous && isRich && isPeacefull;
+
+            if (firstEnding)
+            {
+                endingIndex = 0;
+            }
+            else if (secondEnding)
+            {
+                endingIndex = 1;
+            }
+            else if (thirdEnding)
+            {
+                endingIndex = 2;
+
+            }
+            else if (fourthEnding)
+            {
+                endingIndex = 3;
+
+            }
+            else if (fifthEnding)
+            {
+                endingIndex = 4;
+
+            }
+            else if (sixthEnding)
+            {
+                endingIndex = 5;
+
+            }
+            else if (seventhEnding)
+            {
+                endingIndex = 6;
+
+            }
+            else if (eightEnding)
+            {
+                endingIndex = 7;
+
+            }
+            else if (ninthEnding)
+            {
+                endingIndex = 8;
+            }
+            //엔딩 인덱스에 맞춰서 엔딩 사진,텍스트보여주기
+            //endingSprite.sprite = endingSprites[];
+            afterCome.gameObject.SetActive(true);
+            Talk(endingText, endingIndex +10, 0);
+        });
+        
 
     }
+    
 }

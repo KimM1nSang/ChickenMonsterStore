@@ -8,40 +8,48 @@ public class CutSceneManager : MonoBehaviour
 {
     public Image fadePanel;
     public Image[] cutScenes;
-    public int index = 1;
-    private void Awake()
+    public int index = 0;
+
+    private void Start()
     {
+        index = 0;
+        GameManager.Instance.timeManager.dayTimeScale = 0;
         if (SaveGame.Instance.data.isCutSceneWatched)
         {
             SceneActiveFalse();
         }
-
-        DOTween.To(() => fadePanel.color, a => fadePanel.color = a, new Color(0, 0, 0, 0), 1).OnComplete(() => {
-            if (SaveGame.Instance.data.isCutSceneWatched)
+        //Debug.Log(SaveGame.Instance.data.isCutSceneWatched);
+        DOTween.To(() => fadePanel.color, a => fadePanel.color = a, new Color(0, 0, 0, 0), 3).OnComplete(() => {
+            if (!SaveGame.Instance.data.isCutSceneWatched)
             {
-                StartCoroutine(CutScene(2));
+                CutScene(2,2);
+            }
+            else
+            {
+                GameManager.Instance.timeManager.dayTimeScale = 1;
             }
         });
+    }
+    public void CutScene(float waitTime,float fadeTime)
+    {
+        cutScenes[index].DOFade(1, waitTime).OnComplete(() => {
+            cutScenes[index].DOFade(0, fadeTime).OnComplete(() => {
+                if (index == cutScenes.Length -1)
+                {
+                    GameManager.Instance.timeManager.dayTimeScale = 1;
+                    SaveGame.Instance.data.isCutSceneWatched = true;
+                    SceneActiveFalse();
+                    Debug.Log("aaaaa");
+                }
+                else
+                {
+                    ++index;
+                    CutScene(waitTime, fadeTime);
+                }
+            });
+        });
+            
         
-    }
-    private void Start()
-    {
-        GameManager.Instance.timeManager.dayTimeScale = 0;
-    }
-    public IEnumerator CutScene(float waitTime)
-    {
-        yield return new WaitForSeconds(waitTime);
-        cutScenes[index].DOFade(0, waitTime);
-        if (index < cutScenes.Length)
-        {
-            ++index;
-            StartCoroutine(CutScene(waitTime));
-        }
-        else
-        {
-            SaveGame.Instance.data.isCutSceneWatched = true;
-            SceneActiveFalse();
-        }
     }
     private void SceneActiveFalse()
     {

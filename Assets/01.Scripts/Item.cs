@@ -57,9 +57,11 @@ public class Item
 				{
 					DecreaseMoney(currentPrice);
 					SaveGame.Instance.data.chickens.Add(chicken);
+					SoundManager.Instance.Purchase.Play();
 				}
 				else
 				{
+					SoundManager.Instance.CantPurchase.Play();
 					chicken.rank = rank1;
 				}
 				break;
@@ -76,9 +78,11 @@ public class Item
 					{
 						SaveGame.Instance.data.friedPowders.Add(friedPowder);
 					}
+					SoundManager.Instance.Purchase.Play();
 				}
 				else
 				{
+					SoundManager.Instance.CantPurchase.Play();
 					friedPowder.rank = rank2;
 				}
 				break;
@@ -89,10 +93,13 @@ public class Item
 				if (SaveGame.Instance.data.money >= currentPrice&& rank3 != shopRank && rank3 <= shopRank)
 				{
 					DecreaseMoney(currentPrice);
+					SoundManager.Instance.Purchase.Play();
 				}
 				else
 				{
+					SoundManager.Instance.CantPurchase.Play();
 					SaveGame.Instance.data.oil.rank = rank3;
+
 				}
 				break;
 		}

@@ -12,32 +12,38 @@ public class Title : MonoBehaviour
     public string nextScene = "";
     public string startTextInfo = "용사인 나는, 치킨집을 차려서 50일을 버틴다";
     [SerializeField] private Text pressAnyKey;
-    public bool canLoadScene = false;
+
+    public bool isLoadGame = false;
 
     public bool isChoosed = false;
     public bool isMoved = true;
+    public bool isTextPlay = false;
 
     public Text[] titleText;
-    private Vector3[] titleTextFirstPosition = new Vector3[3];
+    private Vector3[] titleTextFirstPosition = new Vector3[4];
     public Transform btns;
     public Vector3 btnsFirstPosition = new Vector3();
     // Update is called once per frame
     private void Awake()
     {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++)
         {
             titleTextFirstPosition[i] = titleText[i].transform.position;
         }
         index = 0;
         titleText[index].transform.position = titleTextFirstPosition[index] - new Vector3(100, 0, 0);
         btnsFirstPosition = btns.position;
+        if (!SaveGame.Instance.data.IsHaveData)
+        {
+            titleText[0].color -= new Color(.4f, .4f, .4f, 0);
+        }
     }
 
     void Update()
     {
-        if(!isChoosed)
+        if (!isChoosed)
         {
-            if (Input.GetKeyDown(KeyCode.UpArrow) && index <= 2 && index > 0)
+            if (Input.GetKeyDown(KeyCode.UpArrow) && index <= 3 && index > 0)
             {
                 --index;
                 titleText[index].transform.position = titleTextFirstPosition[index] - new Vector3(150, 0, 0);
@@ -47,7 +53,7 @@ public class Title : MonoBehaviour
                     titleText[index + 1].text = "Exit";
                 }
             }
-            else if (Input.GetKeyDown(KeyCode.DownArrow) && index < 2 && index >= 0)
+            else if (Input.GetKeyDown(KeyCode.DownArrow) && index < 3 && index >= 0)
             {
                 ++index;
                 titleText[index].transform.position = titleTextFirstPosition[index] - new Vector3(150, 0, 0);
@@ -67,22 +73,28 @@ public class Title : MonoBehaviour
             isChoosed = true;
             switch (index)
             {
-                case 0://스타트
-                    btns.DOMoveX(btnsFirstPosition.x + 1000,1).OnComplete(()=> {
-                        startText.DOText(startTextInfo, 8).OnComplete(() => {
-                            canLoadScene = true;
-                            pressAnyKey.DOFade(1,1).SetLoops(-1, LoopType.Yoyo);
-                        });
-                    });
+                case 0://이어하기
+                    if(SaveGame.Instance.data.IsHaveData)
+                    {
+                        ReadyToGameStart();
+                    }
+                    else
+                    {
+                        isChoosed = false;
+                    }
                     break;
-                case 1://도움말
+                case 1://뉴게임
+                    SaveGame.Instance.NewGameData();
+                    SaveGame.Instance.SaveGameData();
+                    ReadyToGameStart();
+                    break;
+                case 2://도움말
+                    isMoved = !isMoved;
+                    isChoosed = !isMoved;
                     float pos = isMoved ? btnsFirstPosition.x - 1100 : btnsFirstPosition.x;
-                    btns.DOMoveX(pos, 1).OnComplete(()=> {
-                        isMoved = !isMoved;
-                        isChoosed = !isMoved;
-                    });
+                    btns.DOMoveX(pos, 1);
                     break;
-                case 2://나가기
+                case 3://나가기
                     titleText[index].text = "ReallyExit";
                     isChoosed = false;
                     break;
@@ -94,9 +106,33 @@ public class Title : MonoBehaviour
                 isMoved = false;
                 });
         }*/
-        if (Input.anyKeyDown && canLoadScene)
+        if (Input.anyKeyDown)
         {
-            SceneManager.LoadScene(nextScene);
+            if (isLoadGame)
+            {
+                SceneManager.LoadScene(nextScene);
+            }
+            if (isTextPlay)
+            {
+                DOTween.Kill("text");
+                startText.text = startTextInfo;
+                PressAnyKeyOn();
+            }
         }
+    }
+    private void PressAnyKeyOn()
+    {
+        isLoadGame = true;
+
+        pressAnyKey.DOFade(1, 1).SetLoops(-1, LoopType.Yoyo);
+    }
+    private void ReadyToGameStart()
+    {
+        btns.DOMoveX(btnsFirstPosition.x + 1000, 1).OnComplete(() => {
+            isTextPlay = true;
+            startText.DOText(startTextInfo, 8).SetId("text").OnComplete(() => {
+                PressAnyKeyOn();
+            });
+        });
     }
 }
