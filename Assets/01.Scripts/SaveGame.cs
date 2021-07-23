@@ -183,14 +183,4 @@ public class SaveGame : MonoBehaviour
 
         File.WriteAllText(filePath, save);
     }
-
-    private void OnApplicationQuit()
-    {
-        SaveGameData();
-    }
-
-    private void OnApplicationPause()
-    {
-        SaveGameData();
-    }
 }

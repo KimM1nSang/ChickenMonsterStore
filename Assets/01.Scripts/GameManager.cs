@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using DG.Tweening;
 using System.Linq;
 using System.Net.NetworkInformation;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -136,10 +137,12 @@ public class GameManager : MonoBehaviour
                                 item.ExitTheStore(new Vector3(0, -1, 0));
                             }
                         }
+                        SaveGame.Instance.SaveGameData();
                     }
                 }
                 else
                 {
+                    SaveGame.Instance.SaveGameData();
                     TextReset(orderText);
                     shopPanel.gameObject.transform.DOMove(new Vector3(0, -10, 0), .5f).OnComplete(() =>
                     {
@@ -222,8 +225,12 @@ public class GameManager : MonoBehaviour
                 PanelActive();
             }
         }
-        else
+        else if (isEnding)
         {
+            if(Input.anyKeyDown)
+            {
+                SceneManager.LoadScene("Main");
+            }
             timeManager.dayTimeScale = 0;
         }
     }
@@ -302,9 +309,12 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            if (customerType >= 3 && customerType <= 6 && orderState == OrderState.ORDERED)
+            if (customerType >= 3 && customerType <= 6)
             {
-                EndDispose();
+                if (talkData == null)
+                {
+                    EndDispose();
+                }
             }
         }
         if(!isEnding)
